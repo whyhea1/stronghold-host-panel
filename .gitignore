@@ -7,3 +7,5 @@ usage.json
 .vscode/
 *.log
 node_modules/
+.crt
+.key
