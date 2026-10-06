@@ -11,7 +11,7 @@ This guide sets up the panel on a new Mac, from nothing to a working player link
 | Git | Xcode command line tools | Only to clone the repo and get updates |
 | SakuraFrp account | [natfrp.com](https://www.natfrp.com/) | The free plan is enough for a few players |
 | SakuraFrp `frpc` (CLI) | `~/SakuraFrp/frpc` | You do not need the SakuraFrp launcher app |
-| Mihomo Party | | Only if you are in mainland China. The panel uses it to reach GitHub. |
+| A proxy app (optional) | | Only if you need one to reach GitHub. Step 5 shows the rules. |
 
 ## 1. Install Node.js 22
 
@@ -82,28 +82,106 @@ The `grep` command must print an `auto_https` line. If it prints nothing, the we
 
 Each time you change the tunnel on the website, run the `-w` command again. Then restart the tunnel in the panel.
 
-## 5. Set up Mihomo Party (mainland China only)
+## 5. If you use a proxy app
 
-`frpc` must connect to the SakuraFrp node directly. If TUN sends `frpc` through a foreign proxy node, the tunnel fails or lags. Add this override in Mihomo Party (覆写):
+Do this step if a proxy app runs on the Mac while you host. Examples are Clash Verge Rev, Mihomo Party (Clash Party), ClashX, Surge, v2rayN, V2rayU, and sing-box. If you do not use a proxy, go to step 6.
+
+A proxy app touches the panel in three places:
+
+| Traffic | Must go | Why |
+|---|---|---|
+| `frpc` to the SakuraFrp node | Direct | A proxied tunnel to a domestic node fails or lags |
+| Players to the hub (127.0.0.1, LAN) | Direct | Local traffic. Most apps already send it direct. |
+| The panel, `git`, and VS Code to GitHub | Through the proxy | Game downloads, game updates, and panel updates |
+
+### 5.1 Send frpc direct
+
+This is necessary in TUN mode, 增强模式, or any mode that catches all traffic. In system-proxy mode only, `frpc` does not use the proxy. But add the rule anyway, so that a later mode change does not break the tunnel.
+
+Put these rules at the top of your rule list. Rules higher in the list win.
+
+Clash, Mihomo, and Clash Verge Rev (YAML, or the override / 覆写 / merge feature of your app):
+
+```yaml
+rules:
+  - PROCESS-NAME,frpc,DIRECT
+  - IP-CIDR,127.0.0.0/8,DIRECT,no-resolve
+  - IP-CIDR,192.168.0.0/16,DIRECT,no-resolve
+```
+
+Mihomo Party (Clash Party) script override:
 
 ```js
 function main(config) {
   config.rules = [
     "PROCESS-NAME,frpc,DIRECT",
     "IP-CIDR,127.0.0.0/8,DIRECT,no-resolve",
+    "IP-CIDR,192.168.0.0/16,DIRECT,no-resolve",
     ...(config.rules || []),
   ];
   return config;
 }
 ```
 
-Keep Mihomo Party on while you host. The panel finds its local port (7890, 7897, 10809, or 1080) and uses it for GitHub downloads. If GitHub is still slow, the panel tries the mirrors in `ghMirrors`.
+Surge (`[Rule]` section):
 
-If `git clone` or VS Code cannot reach GitHub, send only GitHub traffic through Mihomo:
+```ini
+PROCESS-NAME,frpc,DIRECT
+IP-CIDR,127.0.0.0/8,DIRECT,no-resolve
+IP-CIDR,192.168.0.0/16,DIRECT,no-resolve
+```
+
+sing-box (`route.rules`, before other rules):
+
+```json
+{ "process_name": ["frpc"], "outbound": "direct" },
+{ "ip_cidr": ["127.0.0.0/8", "192.168.0.0/16"], "outbound": "direct" }
+```
+
+In sing-box, use the tag of your own direct outbound if it is not `direct`.
+
+If your app has no process rules, add a direct rule for the node domain of your tunnel (for example `DOMAIN-SUFFIX,node.example.com,DIRECT`). Or turn off TUN and use system-proxy mode while you host.
+
+The panel also removes `http_proxy`, `https_proxy`, and `all_proxy` from the environment of `frpc`. frp reads these variables, so a proxy that you export in `~/.zshrc` cannot catch the tunnel.
+
+To make sure that the rule works, start the tunnel. Then open the connection list of your proxy app. The `frpc` connection must show DIRECT.
+
+### 5.2 Let the panel reach GitHub
+
+The panel first tries GitHub directly. If that fails, it tries local proxy ports in this order, as HTTP and then as SOCKS5:
+
+| Port | Usual app |
+|---|---|
+| 7890 | Clash, Mihomo, Mihomo Party, ClashX |
+| 7897 | Clash Verge Rev |
+| 10809, 10808 | v2rayN (HTTP, SOCKS) |
+| 6152, 6153 | Surge (HTTP, SOCKS) |
+| 1087, 1080 | V2rayU (HTTP, SOCKS) |
+
+If your app uses a different port, set `ghProxy` in `config.json`, then restart the panel:
+
+```json
+{ "ghProxy": "http://127.0.0.1:你的端口" }
+```
+
+For a SOCKS-only port, use `socks5h://127.0.0.1:你的端口`. The proxy app must be on while the panel downloads. If all proxies fail, the panel tries the mirrors in `ghMirrors`.
+
+### 5.3 Let git and VS Code reach GitHub
+
+In TUN mode, `git` and VS Code usually work without changes. If they cannot connect, send only GitHub traffic through your proxy port:
 
 ```bash
-git config --global http.https://github.com.proxy http://127.0.0.1:7890
+git config --global http.https://github.com.proxy http://127.0.0.1:你的端口
 ```
+
+For VS Code, push Cmd+Shift+P and select "Preferences: Open User Settings (JSON)". Add these lines, then restart VS Code:
+
+```json
+"http.proxy": "http://127.0.0.1:你的端口",
+"http.proxySupport": "override"
+```
+
+To remove the git setting later, run `git config --global --unset http.https://github.com.proxy`.
 
 ## 6. First start
 
@@ -155,8 +233,8 @@ Git ignores `config.json` because it can contain your 访问密钥. `config.exam
 | `panelPort` | `3100` | no | Port of the host panel on 127.0.0.1 |
 | `gameRoot` | `~/StrongholdProtocol` | no | Folder for `current/`, `previous/`, and `updates/` |
 | `repo` | `sganggs/Stronghold-Protocol` | no | GitHub repo for game releases |
-| `ghProxy` | `auto` | no | `auto` finds Mihomo. `none` turns proxies off. You can also give a URL, for example `http://127.0.0.1:7890`. |
-| `proxyPorts` | `[7890, 7897, 10809, 1080]` | no | Local ports that `auto` tries |
+| `ghProxy` | `auto` | no | `auto` tries the ports in `proxyPorts`. `none` turns proxies off. You can also give a URL, for example `http://127.0.0.1:7890` or `socks5h://127.0.0.1:1080`. |
+| `proxyPorts` | `[7890, 7897, 10809, 10808, 6152, 6153, 1087, 1080]` | no | Local proxy ports that `auto` tries, as HTTP and SOCKS5. See step 5.2. |
 | `ghMirrors` | `["https://ghfast.top/", "https://gh-proxy.com/"]` | no | Download mirrors, used if GitHub fails |
 
 A minimal `config.json` only needs the keys that are different from the defaults. The panel adds the other keys when you save the settings.
@@ -192,9 +270,10 @@ Git does not touch `config.json` or `usage.json` during an update.
 |---|---|
 | Players get `501 Not Implemented` | They used `http://`. Send the `https://` link. If 自动 HTTPS is off, do step 4 again. |
 | `https://` gives `ERR_SSL_PROTOCOL_ERROR` | The running `frpc` does not use 自动 HTTPS. Run `grep auto_https ~/SakuraFrp/frpc.ini`. If it prints nothing, run the `-w` command from step 4 again. Then restart the tunnel in the panel. |
+| The tunnel fails or lags, and a proxy app is on | `frpc` goes through the proxy. Add the rules from step 5.1, then make sure that the connection shows DIRECT. |
 | Tunnel shows 隧道已在线 | An old `frpc` is still connected. Click 断开, then 连接. If that does not help, close the SakuraFrp launcher app and click 连接 again. |
 | Red banner: port 3000 in use | Another program holds port 3000. Click 重启并接管. |
 | The panel says the game is not installed | Do step 8 |
-| GitHub check fails | Turn Mihomo Party on. If your mixed port is not in `proxyPorts`, set `ghProxy` to `http://127.0.0.1:<port>`. |
+| GitHub check fails | Turn your proxy app on. If its port is not in `proxyPorts`, set `ghProxy`. See step 5.2. |
 | macOS blocks `frpc` or the start file | Run `xattr -d com.apple.quarantine <file>`, or right-click the file and select Open |
 | The game does not start | Run `node -v`. It must print `v22.x`. Then read the Game logs tab in the panel. |

@@ -2,11 +2,15 @@
 
 A local web panel to host [Stronghold Protocol](https://github.com/sganggs/Stronghold-Protocol) on a Mac for remote players through a SakuraFrp tunnel. The panel replaces the terminal workflow. It starts the game and the `frpc` CLI, shows their logs, and puts a player hub in front of the game.
 
-No npm dependencies. Needs macOS and Node.js 18 or later.
+No npm dependencies. Needs macOS and Node.js 22 (the game needs 22, the panel alone runs on 18 or later).
+
+> ### [Install and setup guide →](INSTALL.md)
+>
+> New Mac or first install? Start here. The guide covers Node.js, the SakuraFrp tunnel, proxy apps (Clash, Mihomo, Surge, v2rayN, sing-box), `config.json`, and troubleshooting.
 
 ## Start
 
-For a new Mac, read [INSTALL.md](INSTALL.md) first. It covers Node.js, the SakuraFrp tunnel, Mihomo Party, and `config.json`.
+For a new Mac, do the [install and setup guide](INSTALL.md) first.
 
 When the setup is done:
 
@@ -37,7 +41,7 @@ When the game is down, `/play` shows an offline page. The page returns players t
 ## Features
 
 - Game: start, stop, restart, health check, update from GitHub releases. The panel keeps the old version in `previous/` after an update.
-- Tunnel: `frpc` as a CLI process, with cleanup of leftover processes.
+- Tunnel: `frpc` as a CLI process, with cleanup of leftover processes. The panel removes proxy variables from the environment of `frpc`, so the tunnel always connects directly.
 - Announcements: a banner on every game page, with preset messages.
 - Room members: the hub reads `room.state` frames from the game's WebSocket traffic. It sends nothing to the game and changes no game files.
 - Daily data budget: 2 GiB per day by default, with days that start at 00:00 UTC+8. At 80%, 95%, and 100% the panel shows a macOS notification and a panel banner. It can also show players a separate 流量提醒 bar. The panel never stops the game because of the budget.
