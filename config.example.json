@@ -22,7 +22,7 @@
     "https://ghfast.top/",
     "https://gh-proxy.com/"
   ],
-  "nodeName": "示例节点",
+  "nodeName": "我是节点名字",
   "dailyLimitGB": 2,
   "dailyAutoBroadcast": true
 }
