@@ -240,7 +240,7 @@ sing-box 配置中，如果直连出站的 tag 不是 `direct`，请换成你自
 { "ghProxy": "http://127.0.0.1:你的端口" }
 ```
 
-只有 SOCKS 端口时，写 `socks5h://127.0.0.1:你的端口`。面板下载期间代理软件必须保持开启。代理和直连都失败时，面板尝试 `ghMirrors` 中的镜像。下载时，如果某条线路持续 20 秒低于 100 KB/s，面板换下一条；面板日志显示每次尝试的线路。
+只有 SOCKS 端口时，写 `socks5h://127.0.0.1:你的端口`。面板下载期间代理软件必须保持开启。代理和直连都失败时，面板尝试 `ghMirrors` 中的镜像。下载时，如果某条线路持续 20 秒低于 100 KB/s，面板换下一条；面板日志显示每次尝试的线路。GitHub API 每个 IP 每小时限 60 次请求，共享 IP（运营商 NAT、代理节点）容易用完；此时面板改从 Releases 页面读取版本。
 
 ### 6. 首次启动
 
@@ -644,7 +644,7 @@ If your app uses a different port, set `ghProxy` in `config.json`, then restart 
 { "ghProxy": "http://127.0.0.1:你的端口" }
 ```
 
-For a SOCKS-only port, use `socks5h://127.0.0.1:你的端口`. The proxy app must be on while the panel downloads. If the proxies and the direct route fail, the panel tries the mirrors in `ghMirrors`. If a download route stays under 100 KB/s for 20 s, the panel moves to the next route. The panel log shows each route it tries.
+For a SOCKS-only port, use `socks5h://127.0.0.1:你的端口`. The proxy app must be on while the panel downloads. If the proxies and the direct route fail, the panel tries the mirrors in `ghMirrors`. If a download route stays under 100 KB/s for 20 s, the panel moves to the next route. The panel log shows each route it tries. The GitHub API allows 60 requests per hour per IP, and shared IPs (carrier NAT, proxy nodes) often use them up. Then the panel reads the version from the release page.
 
 ### 6. First start
 
