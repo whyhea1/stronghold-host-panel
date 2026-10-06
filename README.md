@@ -6,10 +6,12 @@ No npm dependencies. Needs macOS and Node.js 18 or later.
 
 ## Start
 
-1. Install the game to `~/StrongholdProtocol/current`. The panel can also download it with the update button.
-2. Put the SakuraFrp CLI at `~/SakuraFrp/frpc` and its config at `~/SakuraFrp/frpc.ini`.
-3. Double-click `Start-Stronghold-Panel.command`. The panel opens at <http://localhost:3100>.
-4. Click 开始联机. This starts the game and the tunnel.
+For a new Mac, read [INSTALL.md](INSTALL.md) first. It covers Node.js, the SakuraFrp tunnel, Mihomo Party, and `config.json`.
+
+When the setup is done:
+
+1. Double-click `Start-Stronghold-Panel.command`. The panel opens at <http://localhost:3100>.
+2. Click 开始联机. This starts the game and the tunnel.
 
 Keep the Terminal window open while you host. If you close it, the panel stops the game and the tunnel.
 
@@ -44,7 +46,7 @@ When the game is down, `/play` shows an offline page. The page returns players t
 
 ## Configuration
 
-The panel creates `config.json` on first start with the defaults from `lib/core.mjs`. `config.example.json` shows the keys. Git ignores `config.json` because it can contain the SakuraFrp access key. Git also ignores `usage.json`, which stores today's data count.
+The panel creates `config.json` on first start with the defaults from `lib/core.mjs`. `config.example.json` shows the keys. [INSTALL.md](INSTALL.md#configjson) explains each key. Git ignores `config.json` because it can contain the SakuraFrp access key. Git also ignores `usage.json`, which stores today's data count.
 
 You can change these keys in the panel settings: `publicUrl`, `frpcBin`, `frpcConfig`, `sakuraToken`, `nodeName`, `speedLimitMbps`, `dailyLimitGB`, `dailyAutoBroadcast`. Change the other keys in the file, then restart the panel.
 
