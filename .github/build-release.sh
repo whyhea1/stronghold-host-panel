@@ -9,9 +9,11 @@ for os in macos windows linux; do
   mkdir -p "$D"
   cp -r server.mjs lib web README.md INSTALL.md config.example.json "$D/"
   case "$os" in
-    macos)   cp Start-Stronghold-Panel.command "$D/" ;;
-    linux)   cp Start-Stronghold-Panel.command "$D/Start-Stronghold-Panel.sh" ;;
-    windows) cp Start-Stronghold-Panel.bat "$D/"
+    macos)   cp Start-Stronghold-Panel.command "$D/"
+             cp install.sh "$D/Install-Stronghold-Panel.command" ;;
+    linux)   cp Start-Stronghold-Panel.command "$D/Start-Stronghold-Panel.sh"
+             cp install.sh "$D/" ;;
+    windows) cp Start-Stronghold-Panel.bat Install-Stronghold-Panel.bat install.ps1 "$D/"
              python3 - "$D/config.example.json" <<'PY'
 import json, sys
 p = sys.argv[1]; d = json.load(open(p, encoding="utf-8"))
@@ -22,7 +24,7 @@ PY
   esac
   find "$D" -type d -exec chmod 755 {} +
   find "$D" -type f -exec chmod 644 {} +
-  chmod 755 "$D"/Start-Stronghold-Panel.command "$D"/Start-Stronghold-Panel.sh 2>/dev/null || true
+  chmod 755 "$D"/Start-Stronghold-Panel.command "$D"/Start-Stronghold-Panel.sh "$D"/Install-Stronghold-Panel.command "$D"/install.sh 2>/dev/null || true
   (cd "dist/$os" && TZ=UTC zip -qrX "../Stronghold-Host-Panel-$V-$os.zip" Stronghold-Host-Panel)
   rm -rf "dist/$os"
 done

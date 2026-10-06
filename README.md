@@ -30,14 +30,22 @@ Host Stronghold Protocol for remote players through a SakuraFrp tunnel, from one
 ## 快速开始
 
 1. 从 **[Releases](https://github.com/whyhea1/stronghold-host-panel/releases/latest)** 下载对应系统的 ZIP 并解压。
-2. 首次安装请按 **[安装指南](INSTALL.md#简体中文)** 完成：Node.js 22、SakuraFrp `frpc`、一条启用「自动 HTTPS」的 TCP 隧道。只需配置一次。
+2. 首次安装：运行文件夹中的安装脚本。脚本安装 Node.js 22 和 SakuraFrp `frpc`，用访问密钥选择或新建一条启用「自动 HTTPS」的 TCP 隧道，写入 `frpc.ini`，并下载游戏。只需运行一次。需要提前注册 SakuraFrp 并完成实名认证，见 **[安装指南](INSTALL.md#自动安装)**。
 3. 之后每次开服：运行启动文件，点击「开始联机」，将 `https://` 玩家链接或二维码发给玩家。
 
-| 系统 | 启动文件 |
-|---|---|
-| macOS | 双击 `Start-Stronghold-Panel.command` |
-| Windows | 双击 `Start-Stronghold-Panel.bat` |
-| Linux | 终端运行 `./Start-Stronghold-Panel.sh`（Git 克隆中为 `.command`） |
+| 系统 | 安装脚本（首次） | 启动文件（每次开服） |
+|---|---|---|
+| macOS | 双击 `Install-Stronghold-Panel.command` | 双击 `Start-Stronghold-Panel.command` |
+| Windows | 双击 `Install-Stronghold-Panel.bat` | 双击 `Start-Stronghold-Panel.bat` |
+| Linux | 终端运行 `./install.sh` | 终端运行 `./Start-Stronghold-Panel.sh`（Git 克隆中为 `.command`） |
+
+不下载 ZIP 也可以，在终端运行一行命令（Windows 命令和镜像地址见[安装指南](INSTALL.md#方法二一行命令)）：
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/whyhea1/stronghold-host-panel/main/install.sh | bash
+```
+
+需要逐步操作或排查问题时，见[手动安装](INSTALL.md#手动安装)。
 
 面板地址为 <http://localhost:3100>。开服期间请保持终端窗口打开；关闭窗口时，面板会同时停止游戏和隧道。
 
@@ -80,7 +88,7 @@ SakuraFrp 节点  ◄── frpc（命令行子进程，强制直连）
 
 **游戏更新**
 
-从 GitHub Releases 检查 `sganggs/Stronghold-Protocol` 的新版本，一键下载安装，完成后自动重启游戏。上一版本保留在 `previous/`，可回滚。GitHub 直连失败时，依次尝试本机代理端口和下载镜像。
+从 GitHub Releases 检查 `sganggs/Stronghold-Protocol` 的新版本，一键下载安装，完成后自动重启游戏。上一版本保留在 `previous/`，可回滚。访问 GitHub 先走本机代理端口，再直连，最后用下载镜像；某条线路持续 20 秒低于 100 KB/s 时换下一条。
 
 </td>
 </tr>
@@ -199,6 +207,9 @@ SakuraFrp 节点  ◄── frpc（命令行子进程，强制直连）
 
 ```
 server.mjs            入口
+install.sh            安装脚本（macOS / Linux；macOS ZIP 中为 Install-Stronghold-Panel.command）
+install.ps1           安装脚本（Windows，由 Install-Stronghold-Panel.bat 启动）
+lib/setup.mjs         安装脚本的共用部分：frpc、访问密钥、隧道、frpc.ini、游戏
 lib/core.mjs          配置、共享状态、日志总线
 lib/util.mjs          进程与网络工具函数
 lib/platform.mjs      macOS / Windows / Linux 差异（打开、通知、防休眠、结束进程、解压）
@@ -232,14 +243,22 @@ No npm dependencies and no `npm install`. Needs Node.js 22 or later (the game ne
 ## Quick start
 
 1. Download the ZIP for your system from **[Releases](https://github.com/whyhea1/stronghold-host-panel/releases/latest)** and unzip it.
-2. On a new computer, do the **[install and setup guide](INSTALL.md#english)** first: Node.js 22, the SakuraFrp `frpc`, and a TCP tunnel with 自动 HTTPS on. You do this one time.
+2. On a new computer: run the installer in the folder. It installs Node.js 22 and the SakuraFrp `frpc`, uses your access key to select or create a TCP tunnel with 自动 HTTPS on, writes `frpc.ini`, and downloads the game. You do this one time. First, register at SakuraFrp and do the real-name verification. See the **[install guide](INSTALL.md#automatic-install)**.
 3. To host: run the start file, click 开始联机, then send the `https://` player link or the QR code to your players.
 
-| System | Start file |
-|---|---|
-| macOS | Double-click `Start-Stronghold-Panel.command` |
-| Windows | Double-click `Start-Stronghold-Panel.bat` |
-| Linux | Run `./Start-Stronghold-Panel.sh` in a terminal (`.command` in a Git clone) |
+| System | Installer (first time) | Start file (each time you host) |
+|---|---|---|
+| macOS | Double-click `Install-Stronghold-Panel.command` | Double-click `Start-Stronghold-Panel.command` |
+| Windows | Double-click `Install-Stronghold-Panel.bat` | Double-click `Start-Stronghold-Panel.bat` |
+| Linux | Run `./install.sh` in a terminal | Run `./Start-Stronghold-Panel.sh` in a terminal (`.command` in a Git clone) |
+
+You can also skip the ZIP and run one command in a terminal (the Windows command and the mirror address are in the [install guide](INSTALL.md#option-2-one-command)):
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/whyhea1/stronghold-host-panel/main/install.sh | bash
+```
+
+For each step by hand, or to find the cause of a problem, see [Manual install](INSTALL.md#manual-install).
 
 The panel opens at <http://localhost:3100>. Keep the terminal window open while you host. If you close it, the panel stops the game and the tunnel.
 
@@ -282,7 +301,7 @@ Your browser ──► host panel :3100 (127.0.0.1 only, other devices cannot co
 
 **Game updates**
 
-The panel checks GitHub releases of `sganggs/Stronghold-Protocol`, installs a new version with one click, then restarts the game. It keeps the old version in `previous/` for rollback. If GitHub is not reachable directly, the panel tries local proxy ports, then download mirrors.
+The panel checks GitHub releases of `sganggs/Stronghold-Protocol`, installs a new version with one click, then restarts the game. It keeps the old version in `previous/` for rollback. For GitHub, the panel tries local proxy ports first, then direct, then download mirrors. A route that stays under 100 KB/s for 20 s is dropped for the next one.
 
 </td>
 </tr>
@@ -401,6 +420,9 @@ To make a release, create a release on GitHub with a new tag (for example `v1.1.
 
 ```
 server.mjs            entry point
+install.sh            installer (macOS / Linux; Install-Stronghold-Panel.command in the macOS ZIP)
+install.ps1           installer (Windows, started by Install-Stronghold-Panel.bat)
+lib/setup.mjs         shared part of the installers: frpc, access key, tunnel, frpc.ini, game
 lib/core.mjs          config, shared state, log bus
 lib/util.mjs          process and network helpers
 lib/platform.mjs      macOS / Windows / Linux differences (open, notify, keep awake, kill, unzip)
