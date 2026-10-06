@@ -288,6 +288,7 @@ $("btnnotclear").onclick = () => { $("noticetext").value = ""; act("setNotice", 
 function fillConfig() {
   const c = S.config;
   $("cfgurl").value = c.publicUrl || "";
+  $("cfgurl").placeholder = S.publicUrlAuto && S.publicUrl ? `留空 = 自动：${S.publicUrl}` : "留空 = 从 frpc.ini 自动生成";
   $("cfgbin").value = c.frpcBin || "";
   $("cfgcfg").value = c.frpcConfig || "";
   $("cfgnode").value = c.nodeName || "";

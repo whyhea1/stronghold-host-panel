@@ -4,7 +4,7 @@
   "port": 3000,
   "gameInternalPort": 3001,
   "panelPort": 3100,
-  "publicUrl": "https://node.example.com:12345",
+  "publicUrl": "",
   "frpcBin": "~/SakuraFrp/frpc",
   "frpcConfig": "~/SakuraFrp/frpc.ini",
   "ghProxy": "auto",
@@ -22,7 +22,7 @@
     "https://ghfast.top/",
     "https://gh-proxy.com/"
   ],
-  "nodeName": "我是节点名字",
+  "nodeName": "",
   "dailyLimitGB": 2,
   "dailyAutoBroadcast": true
 }

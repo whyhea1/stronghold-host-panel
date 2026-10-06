@@ -140,7 +140,7 @@ sing-box (`route.rules`, before other rules):
 
 In sing-box, use the tag of your own direct outbound if it is not `direct`.
 
-If your app has no process rules, add a direct rule for the node domain of your tunnel (for example `DOMAIN-SUFFIX,node.example.com,DIRECT`). Or turn off TUN and use system-proxy mode while you host.
+If your app has no process rules, add a direct rule for the node domain of your tunnel (the `server_addr` value in `frpc.ini`, for example `DOMAIN-SUFFIX,<server_addr>,DIRECT`). Or turn off TUN and use system-proxy mode while you host.
 
 The panel also removes `http_proxy`, `https_proxy`, and `all_proxy` from the environment of `frpc`. frp reads these variables, so a proxy that you export in `~/.zshrc` cannot catch the tunnel.
 
@@ -191,13 +191,13 @@ To remove the git setting later, run `git config --global --unset http.https://g
 
 Keep the Terminal window open while you host. If you close it, the panel stops the game and the tunnel.
 
-## 7. Set the player link
+## 7. Check the player link
 
-Open 设置 in the panel. Set 公网地址 to the address of your tunnel, for example `https://node.example.com:12345`. The domain and the remote port are on the SakuraFrp tunnel list. Use `https://`, not `http://`.
+The panel reads the player link from `frpc.ini`. It uses `server_addr` and `remote_port`, and `https://` when `auto_https` is on. The link shows in the 玩家入口 card. Make sure that it starts with `https://`.
 
-Also set 监控节点 to the name of your node, for example `示例节点`. The panel uses this name to show the node status.
+The panel also finds your node by `server_addr`, and reads the SakuraFrp 访问密钥 from the `user =` line. Thus you usually do not have to enter anything in 设置.
 
-The panel reads the SakuraFrp 访问密钥 from the `user =` line in `frpc.ini`. You do not have to enter it again.
+To use a different link, for example a custom domain, enter it in 设置 → 公网地址. To show the status of a different node, enter its name in 设置 → 监控节点. Leave a field empty to go back to the value from `frpc.ini`.
 
 ## 8. Install the game
 
@@ -220,8 +220,8 @@ Git ignores `config.json` because it can contain your 访问密钥. `config.exam
 
 | Key | Default | Panel | Meaning |
 |---|---|---|---|
-| `publicUrl` | `https://node.example.com:12345` | yes | The link that players get. It goes on the copy button and the QR code. |
-| `nodeName` | `示例节点` | yes | SakuraFrp node to show status for |
+| `publicUrl` | empty | yes | The link that players get, on the copy button and the QR code. Empty means "build it from `frpc.ini`". |
+| `nodeName` | empty | yes | SakuraFrp node to show status for. Empty means "find it by `server_addr` in `frpc.ini`". |
 | `frpcBin` | `~/SakuraFrp/frpc` | yes | Path to the `frpc` program |
 | `frpcConfig` | `~/SakuraFrp/frpc.ini` | yes | Path to the tunnel config from step 4 |
 | `sakuraToken` | empty | yes | SakuraFrp 访问密钥. Empty means "read `user =` from `frpc.ini`". |
@@ -237,12 +237,11 @@ Git ignores `config.json` because it can contain your 访问密钥. `config.exam
 | `proxyPorts` | `[7890, 7897, 10809, 10808, 6152, 6153, 1087, 1080]` | no | Local proxy ports that `auto` tries, as HTTP and SOCKS5. See step 5.2. |
 | `ghMirrors` | `["https://ghfast.top/", "https://gh-proxy.com/"]` | no | Download mirrors, used if GitHub fails |
 
-A minimal `config.json` only needs the keys that are different from the defaults. The panel adds the other keys when you save the settings.
+A `config.json` only needs the keys that are different from the defaults. With a standard setup, `{}` is enough. The panel adds the other keys when you save the settings. For example, to use a custom domain:
 
 ```json
 {
-  "publicUrl": "https://你的节点域名:远程端口",
-  "nodeName": "你的节点名"
+  "publicUrl": "https://play.example.com:12345"
 }
 ```
 
