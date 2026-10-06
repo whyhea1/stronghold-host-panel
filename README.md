@@ -4,6 +4,7 @@ A local web panel to host [Stronghold Protocol](https://github.com/sganggs/Stron
 
 No npm dependencies. Runs on macOS, Windows 10/11, and Linux. Needs Node.js 22 or later (the game needs 22, the panel alone runs on 18 or later).
 
+> ### [Download for macOS, Windows, or Linux →](https://github.com/whyhea1/stronghold-host-panel/releases/latest)
 > ### [Install and setup guide →](INSTALL.md)
 >
 > New computer or first install? Start here. The guide covers macOS, Windows, and Linux: Node.js, the SakuraFrp tunnel, proxy apps (Clash, Mihomo, Surge, v2rayN, sing-box), `config.json`, and troubleshooting.
@@ -17,7 +18,7 @@ When the setup is done:
 1. Start the panel. The panel opens at <http://localhost:3100>.
    - macOS: double-click `Start-Stronghold-Panel.command`.
    - Windows: double-click `Start-Stronghold-Panel.bat`.
-   - Linux: run `./Start-Stronghold-Panel.command` in a terminal.
+   - Linux: run `./Start-Stronghold-Panel.sh` in a terminal (`.command` in a Git clone).
 2. Click 开始联机. This starts the game and the tunnel.
 
 Keep the terminal window open while you host. If you close it, the panel stops the game and the tunnel.

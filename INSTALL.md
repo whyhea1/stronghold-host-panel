@@ -29,7 +29,9 @@ The last command must print `v22.x` or later. On an Intel Mac, Homebrew uses `/u
 
 ## 2. Get the panel
 
-In VS Code:
+The easy way: download the ZIP for your system from [Releases](https://github.com/whyhea1/stronghold-host-panel/releases/latest) (`macos`, `windows`, or `linux`), then unzip it to the Desktop. You do not need Git for this.
+
+To get updates with Git, clone the repo instead. In VS Code:
 
 1. Push Cmd+Shift+P (Windows and Linux: Ctrl+Shift+P), type `Git: Clone`, then select "Clone from GitHub".
 2. Select `whyhea1/stronghold-host-panel`.
@@ -198,7 +200,7 @@ To remove the git setting later, run `git config --global --unset http.https://g
 3. The panel creates `config.json` with the default values. See [config.json](#configjson).
 
 - Windows: double-click `Start-Stronghold-Panel.bat`. If SmartScreen blocks it, select More info, then Run anyway. If Windows Firewall asks about Node.js, allow private networks. LAN players need this. Tunnel players do not.
-- Linux: run `./Start-Stronghold-Panel.command` in a terminal, in the panel folder.
+- Linux: run `./Start-Stronghold-Panel.sh` in a terminal, in the panel folder. In a Git clone, the file is `Start-Stronghold-Panel.command`.
 
 Keep the terminal window open while you host. If you close it, the panel stops the game and the tunnel.
 
@@ -275,6 +277,8 @@ On Windows, `~` is your user folder, for example `C:\Users\<you>`.
 3. Start the panel again.
 
 Git does not touch `config.json` or `usage.json` during an update.
+
+If you use a release ZIP, download the new ZIP from [Releases](https://github.com/whyhea1/stronghold-host-panel/releases/latest) and unzip it. Copy `config.json` and `usage.json` from the old folder into the new folder. Then start the panel from the new folder.
 
 ## Troubleshooting
 
