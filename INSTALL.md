@@ -20,7 +20,6 @@ macOS · Windows · Linux
 |---|---|---|
 | macOS、Windows 10/11 或 Linux | | Apple 芯片或 Intel，x64 或 ARM |
 | Node.js 22 或更高 | Homebrew / winget / nvm | 游戏要求 Node 22 或更高 |
-| Git | Xcode 命令行工具 / Git for Windows / 包管理器 | 仅在克隆仓库和获取更新时需要 |
 | SakuraFrp 账号 | [natfrp.com](https://www.natfrp.com/) | 免费套餐足够少量玩家使用 |
 | SakuraFrp `frpc`（命令行） | `~/SakuraFrp/frpc`（Windows：`frpc.exe`） | 不需要 SakuraFrp 启动器 |
 | 代理软件（可选） | | 仅在访问 GitHub 需要代理时使用，规则见第 5 步 |
@@ -36,27 +35,14 @@ node -v
 
 最后一条命令应输出 `v22.x` 或更高。Intel Mac 上 Homebrew 的路径是 `/usr/local/opt/node@22/bin`，启动文件两个路径都会查找。
 
-- Windows（PowerShell）：`winget install OpenJS.NodeJS.LTS` 和 `winget install Git.Git`，然后新开一个窗口运行 `node -v`。
-- Linux：安装 [nvm](https://github.com/nvm-sh/nvm#installing-and-updating)，然后运行 `nvm install 22`。发行版自带的 Node 版本通常低于 22。另需安装 `git`、`curl`、`unzip`（Debian/Ubuntu：`sudo apt install git curl unzip`）。
+- Windows（PowerShell）：`winget install OpenJS.NodeJS.LTS`，然后新开一个窗口运行 `node -v`。
+- Linux：安装 [nvm](https://github.com/nvm-sh/nvm#installing-and-updating)，然后运行 `nvm install 22`。发行版自带的 Node 版本通常低于 22。另需安装 `curl` 和 `unzip`（Debian/Ubuntu：`sudo apt install curl unzip`）。
 
 ## 2. 获取面板
 
-最简单的方式：从 [Releases](https://github.com/whyhea1/stronghold-host-panel/releases/latest) 下载对应系统的 ZIP（`macos`、`windows` 或 `linux`），解压到桌面。这种方式不需要 Git。
+从 [Releases](https://github.com/whyhea1/stronghold-host-panel/releases/latest) 下载对应系统的 ZIP：`macos`、`windows` 或 `linux`，解压到任意位置（例如桌面）。文件夹中包含面板、文档、`config.example.json` 和对应系统的启动文件。不需要 Git。
 
-如需用 Git 获取更新，改为克隆仓库。在 VS Code 中：
-
-1. 按 Cmd+Shift+P（Windows 和 Linux：Ctrl+Shift+P），输入 `Git: Clone`，选择「Clone from GitHub」。
-2. 选择 `whyhea1/stronghold-host-panel`。
-3. 位置选桌面，然后打开该文件夹。
-
-终端中的等效命令（PowerShell 中同样可用）：
-
-```bash
-cd ~/Desktop
-git clone https://github.com/whyhea1/stronghold-host-panel.git
-```
-
-macOS 提示安装命令行开发者工具时，选择安装。这一步会安装 Git。
+如需改用 `git pull` 更新面板，见 [使用 Git 克隆（可选）](#使用-git-克隆可选)。
 
 ## 3. 安装 SakuraFrp 命令行客户端
 
@@ -116,7 +102,7 @@ Windows（PowerShell）：`cd ~\SakuraFrp`，然后 `.\frpc.exe -f 你的访问�
 |---|---|---|
 | `frpc` 到 SakuraFrp 节点 | 直连 | 隧道经代理连国内节点会失败或延迟高 |
 | 玩家到中转站（127.0.0.1、局域网） | 直连 | 本地流量，大多数代理软件默认已直连 |
-| 面板、`git`、VS Code 到 GitHub | 走代理 | 游戏下载、游戏更新、面板更新 |
+| 面板到 GitHub | 走代理 | 游戏下载、游戏更新 |
 
 ### 5.1 让 frpc 直连
 
@@ -182,23 +168,6 @@ sing-box 配置中，如果直连出站的 tag 不是 `direct`，请换成你自
 
 只有 SOCKS 端口时，写 `socks5h://127.0.0.1:你的端口`。面板下载期间代理软件必须保持开启。所有代理都失败时，面板会尝试 `ghMirrors` 中的镜像。
 
-### 5.3 让 git 和 VS Code 访问 GitHub
-
-TUN 模式下 `git` 和 VS Code 通常无需设置。如果无法连接，只让 GitHub 流量走代理端口：
-
-```bash
-git config --global http.https://github.com.proxy http://127.0.0.1:你的端口
-```
-
-VS Code：按 Cmd+Shift+P（Windows 和 Linux：Ctrl+Shift+P），选择「Preferences: Open User Settings (JSON)」，加入以下两行，然后重启 VS Code：
-
-```json
-"http.proxy": "http://127.0.0.1:你的端口",
-"http.proxySupport": "override"
-```
-
-以后要撤销 git 设置，运行 `git config --global --unset http.https://github.com.proxy`。
-
 ## 6. 首次启动
 
 1. 双击 `Start-Stronghold-Panel.command`。首次运行可能被 macOS 拦截，此时右键文件并选择「打开」。
@@ -206,7 +175,7 @@ VS Code：按 Cmd+Shift+P（Windows 和 Linux：Ctrl+Shift+P），选择「Prefe
 3. 面板用默认值生成 `config.json`，见 [config.json 参数](#configjson-参数)。
 
 - Windows：双击 `Start-Stronghold-Panel.bat`。SmartScreen 拦截时，选择「更多信息 → 仍要运行」。Windows 防火墙询问 Node.js 时，允许专用网络：局域网玩家需要，隧道玩家不需要。
-- Linux：在面板文件夹中，于终端运行 `./Start-Stronghold-Panel.sh`。Git 克隆中该文件名为 `Start-Stronghold-Panel.command`。
+- Linux：在面板文件夹中，于终端运行 `./Start-Stronghold-Panel.sh`。
 
 开服期间请保持终端窗口打开；关闭窗口时，面板会同时停止游戏和隧道。
 
@@ -248,7 +217,7 @@ VS Code：按 Cmd+Shift+P（Windows 和 Linux：Ctrl+Shift+P），选择「Prefe
 
 面板只在启动时读取一次 `config.json`，编辑文件后需重启面板。标为「面板」的参数也在「设置」中，在那里修改无需重启。
 
-`config.json` 可能包含访问密钥，因此已被 Git 忽略。仓库中的 `config.example.json` 展示了格式。
+`config.json` 可能包含访问密钥，请勿分享该文件。`config.example.json` 展示了格式。
 
 | 参数 | 默认值 | 面板 | 含义 |
 |---|---|---|---|
@@ -292,12 +261,11 @@ Windows 上 `~` 指用户文件夹，例如 `C:\Users\<用户名>`。
 ## 更新面板
 
 1. 停止面板：关闭终端窗口或按 Ctrl+C。
-2. VS Code 中点击状态栏的 Sync；终端中在面板文件夹运行 `git pull`。
-3. 重新启动面板。
+2. 从 [Releases](https://github.com/whyhea1/stronghold-host-panel/releases/latest) 下载新 ZIP 并解压。
+3. 把旧文件夹中的 `config.json` 和 `usage.json` 复制到新文件夹。
+4. 从新文件夹启动面板。之后可以删除旧文件夹。
 
-Git 更新不会改动 `config.json` 和 `usage.json`。
-
-使用发布 ZIP 的：从 [Releases](https://github.com/whyhea1/stronghold-host-panel/releases/latest) 下载新 ZIP 并解压，把旧文件夹中的 `config.json` 和 `usage.json` 复制到新文件夹，然后从新文件夹启动面板。
+游戏安装在 `~/StrongholdProtocol`，不在面板文件夹内，更新面板不会影响游戏。使用 Git 克隆的，见 [用 Git 更新](#用-git-更新)。
 
 ## 故障排查
 
@@ -316,6 +284,58 @@ Git 更新不会改动 `config.json` 和 `usage.json`。
 | Linux：没有桌面通知 | 安装 `notify-send`（Debian/Ubuntu：`sudo apt install libnotify-bin`）。面板横幅不依赖它。 |
 | 游戏无法启动 | 运行 `node -v`，应输出 `v22.x` 或更高；然后查看面板「日志」卡片中的「游戏」标签。 |
 
+## 使用 Git 克隆（可选）
+
+如果希望用 `git pull` 更新面板，可以用克隆代替发布 ZIP。克隆会拿到 `main` 上的每个提交，包括尚未发布的提交；也会包含文档截图。
+
+### 安装 Git
+
+- macOS：运行 `git --version`。提示安装命令行开发者工具时，选择安装，这一步会安装 Git。
+- Windows（PowerShell）：`winget install Git.Git`，然后新开一个窗口。
+- Linux：用包管理器安装 `git`（Debian/Ubuntu：`sudo apt install git`）。
+
+### 克隆仓库
+
+在 VS Code 中：
+
+1. 按 Cmd+Shift+P（Windows 和 Linux：Ctrl+Shift+P），输入 `Git: Clone`，选择「Clone from GitHub」。
+2. 选择 `whyhea1/stronghold-host-panel`。
+3. 位置选桌面，然后打开该文件夹。
+
+终端中的等效命令（PowerShell 中同样可用）：
+
+```bash
+cd ~/Desktop
+git clone https://github.com/whyhea1/stronghold-host-panel.git
+```
+
+然后从第 3 步继续。Linux 上，克隆中的启动文件是 `Start-Stronghold-Panel.command`，用 `./Start-Stronghold-Panel.command` 运行。
+
+### 用 Git 更新
+
+1. 停止面板：关闭终端窗口或按 Ctrl+C。
+2. VS Code 中点击状态栏的 Sync；终端中在面板文件夹运行 `git pull`。
+3. 重新启动面板。
+
+`config.json` 和 `usage.json` 都在 `.gitignore` 中，Git 更新不会改动它们。
+
+### 让 git 和 VS Code 访问 GitHub
+
+开着代理软件（第 5 步）时，`git` 和 VS Code 也需要访问 GitHub。TUN 模式下通常无需设置。如果无法连接，只让 GitHub 流量走代理端口：
+
+```bash
+git config --global http.https://github.com.proxy http://127.0.0.1:你的端口
+```
+
+VS Code：按 Cmd+Shift+P（Windows 和 Linux：Ctrl+Shift+P），选择「Preferences: Open User Settings (JSON)」，加入以下两行，然后重启 VS Code：
+
+```json
+"http.proxy": "http://127.0.0.1:你的端口",
+"http.proxySupport": "override"
+```
+
+以后要撤销 git 设置，运行 `git config --global --unset http.https://github.com.proxy`。
+
 ---
 
 # English
@@ -328,7 +348,6 @@ This guide sets up the panel on a new computer, from nothing to a working player
 |---|---|---|
 | macOS, Windows 10/11, or Linux | | Apple silicon or Intel, x64 or ARM |
 | Node.js 22 or later | Homebrew / winget / nvm | The game needs Node 22 or later |
-| Git | Xcode tools / Git for Windows / package manager | Only to clone the repo and get updates |
 | SakuraFrp account | [natfrp.com](https://www.natfrp.com/) | The free plan is enough for a few players |
 | SakuraFrp `frpc` (CLI) | `~/SakuraFrp/frpc` (Windows: `frpc.exe`) | You do not need the SakuraFrp launcher app |
 | A proxy app (optional) | | Only if you need one to reach GitHub. Step 5 shows the rules. |
@@ -344,27 +363,14 @@ node -v
 
 The last command must print `v22.x` or later. On an Intel Mac, Homebrew uses `/usr/local/opt/node@22/bin`. The start file finds both paths.
 
-- Windows (PowerShell): `winget install OpenJS.NodeJS.LTS` and `winget install Git.Git`. Then open a new window and run `node -v`.
-- Linux: install [nvm](https://github.com/nvm-sh/nvm#installing-and-updating), then run `nvm install 22`. Distro packages are often older than 22. Also install `git`, `curl`, and `unzip` (Debian/Ubuntu: `sudo apt install git curl unzip`).
+- Windows (PowerShell): `winget install OpenJS.NodeJS.LTS`. Then open a new window and run `node -v`.
+- Linux: install [nvm](https://github.com/nvm-sh/nvm#installing-and-updating), then run `nvm install 22`. Distro packages are often older than 22. Also install `curl` and `unzip` (Debian/Ubuntu: `sudo apt install curl unzip`).
 
 ## 2. Get the panel
 
-The easy way: download the ZIP for your system from [Releases](https://github.com/whyhea1/stronghold-host-panel/releases/latest) (`macos`, `windows`, or `linux`), then unzip it to the Desktop. You do not need Git for this.
+Download the ZIP for your system from [Releases](https://github.com/whyhea1/stronghold-host-panel/releases/latest): `macos`, `windows`, or `linux`. Unzip it, for example to the Desktop. The folder contains the panel, the docs, `config.example.json`, and the start file for your system. You do not need Git.
 
-To get updates with Git, clone the repo instead. In VS Code:
-
-1. Push Cmd+Shift+P (Windows and Linux: Ctrl+Shift+P), type `Git: Clone`, then select "Clone from GitHub".
-2. Select `whyhea1/stronghold-host-panel`.
-3. Select the Desktop as the location, then open the folder.
-
-In a terminal, the same thing (the same commands work in PowerShell):
-
-```bash
-cd ~/Desktop
-git clone https://github.com/whyhea1/stronghold-host-panel.git
-```
-
-If macOS asks to install the command line developer tools, accept. This installs Git.
+To update the panel with `git pull` instead, see [Git clone (optional)](#git-clone-optional).
 
 ## 3. Install the SakuraFrp CLI
 
@@ -424,7 +430,7 @@ A proxy app touches the panel in three places:
 |---|---|---|
 | `frpc` to the SakuraFrp node | Direct | A proxied tunnel to a domestic node fails or lags |
 | Players to the hub (127.0.0.1, LAN) | Direct | Local traffic. Most apps already send it direct. |
-| The panel, `git`, and VS Code to GitHub | Through the proxy | Game downloads, game updates, and panel updates |
+| The panel to GitHub | Through the proxy | Game downloads and game updates |
 
 ### 5.1 Send frpc direct
 
@@ -490,23 +496,6 @@ If your app uses a different port, set `ghProxy` in `config.json`, then restart 
 
 For a SOCKS-only port, use `socks5h://127.0.0.1:你的端口`. The proxy app must be on while the panel downloads. If all proxies fail, the panel tries the mirrors in `ghMirrors`.
 
-### 5.3 Let git and VS Code reach GitHub
-
-In TUN mode, `git` and VS Code usually work without changes. If they cannot connect, send only GitHub traffic through your proxy port:
-
-```bash
-git config --global http.https://github.com.proxy http://127.0.0.1:你的端口
-```
-
-For VS Code, push Cmd+Shift+P (Windows and Linux: Ctrl+Shift+P) and select "Preferences: Open User Settings (JSON)". Add these lines, then restart VS Code:
-
-```json
-"http.proxy": "http://127.0.0.1:你的端口",
-"http.proxySupport": "override"
-```
-
-To remove the git setting later, run `git config --global --unset http.https://github.com.proxy`.
-
 ## 6. First start
 
 1. Double-click `Start-Stronghold-Panel.command`. The first time, macOS can block it. Then right-click the file and select Open.
@@ -514,7 +503,7 @@ To remove the git setting later, run `git config --global --unset http.https://g
 3. The panel creates `config.json` with the default values. See [config.json](#configjson).
 
 - Windows: double-click `Start-Stronghold-Panel.bat`. If SmartScreen blocks it, select More info, then Run anyway. If Windows Firewall asks about Node.js, allow private networks. LAN players need this. Tunnel players do not.
-- Linux: run `./Start-Stronghold-Panel.sh` in a terminal, in the panel folder. In a Git clone, the file is `Start-Stronghold-Panel.command`.
+- Linux: run `./Start-Stronghold-Panel.sh` in a terminal, in the panel folder.
 
 Keep the terminal window open while you host. If you close it, the panel stops the game and the tunnel.
 
@@ -556,7 +545,7 @@ The first visit can show a certificate warning. In Chrome, select Advanced, then
 
 The panel reads `config.json` one time, when it starts. If you edit the file, restart the panel. The keys marked "Panel" are also in 设置. Changes there do not need a restart.
 
-Git ignores `config.json` because it can contain your 访问密钥. `config.example.json` in the repo shows the format.
+`config.json` can contain your 访问密钥, so do not share the file. `config.example.json` shows the format.
 
 | Key | Default | Panel | Meaning |
 |---|---|---|---|
@@ -600,12 +589,11 @@ On Windows, `~` is your user folder, for example `C:\Users\<you>`.
 ## Update the panel
 
 1. Stop the panel. Close the terminal window or push Ctrl+C.
-2. In VS Code, click Sync in the status bar. In a terminal, run `git pull` in the panel folder.
-3. Start the panel again.
+2. Download the new ZIP from [Releases](https://github.com/whyhea1/stronghold-host-panel/releases/latest) and unzip it.
+3. Copy `config.json` and `usage.json` from the old folder into the new folder.
+4. Start the panel from the new folder. Then you can delete the old folder.
 
-Git does not touch `config.json` or `usage.json` during an update.
-
-If you use a release ZIP, download the new ZIP from [Releases](https://github.com/whyhea1/stronghold-host-panel/releases/latest) and unzip it. Copy `config.json` and `usage.json` from the old folder into the new folder. Then start the panel from the new folder.
+The game is in `~/StrongholdProtocol`, outside the panel folder. A panel update does not touch it. With a Git clone, see [Update with Git](#update-with-git).
 
 ## Troubleshooting
 
@@ -623,3 +611,55 @@ If you use a release ZIP, download the new ZIP from [Releases](https://github.co
 | Linux: "could not extract the ZIP" | Install `unzip` (`sudo apt install unzip`), then click 下载并安装 again |
 | Linux: no desktop notifications | Install `notify-send` (Debian/Ubuntu: `sudo apt install libnotify-bin`). The panel banner works without it. |
 | The game does not start | Run `node -v`. It must print `v22.x` or later. Then read the Game logs tab in the panel. |
+
+## Git clone (optional)
+
+Use a clone instead of the release ZIP if you want to update the panel with `git pull`. A clone gets every commit on `main`, also before a release. It also contains the screenshots of the docs.
+
+### Install Git
+
+- macOS: run `git --version`. If macOS asks to install the command line developer tools, accept. This installs Git.
+- Windows (PowerShell): `winget install Git.Git`, then open a new window.
+- Linux: install `git` with your package manager (Debian/Ubuntu: `sudo apt install git`).
+
+### Clone the repo
+
+In VS Code:
+
+1. Push Cmd+Shift+P (Windows and Linux: Ctrl+Shift+P), type `Git: Clone`, then select "Clone from GitHub".
+2. Select `whyhea1/stronghold-host-panel`.
+3. Select the Desktop as the location, then open the folder.
+
+In a terminal (the same commands work in PowerShell):
+
+```bash
+cd ~/Desktop
+git clone https://github.com/whyhea1/stronghold-host-panel.git
+```
+
+Then continue with step 3. On Linux, the start file in a clone is `Start-Stronghold-Panel.command`. Run it with `./Start-Stronghold-Panel.command`.
+
+### Update with Git
+
+1. Stop the panel. Close the terminal window or push Ctrl+C.
+2. In VS Code, click Sync in the status bar. In a terminal, run `git pull` in the panel folder.
+3. Start the panel again.
+
+Git does not touch `config.json` or `usage.json`, because both are in `.gitignore`.
+
+### Let git and VS Code reach GitHub
+
+If you use a proxy app (step 5), `git` and VS Code also need GitHub. In TUN mode, they usually work without changes. If they cannot connect, send only GitHub traffic through your proxy port:
+
+```bash
+git config --global http.https://github.com.proxy http://127.0.0.1:你的端口
+```
+
+For VS Code, push Cmd+Shift+P (Windows and Linux: Ctrl+Shift+P) and select "Preferences: Open User Settings (JSON)". Add these lines, then restart VS Code:
+
+```json
+"http.proxy": "http://127.0.0.1:你的端口",
+"http.proxySupport": "override"
+```
+
+To remove the git setting later, run `git config --global --unset http.https://github.com.proxy`.
