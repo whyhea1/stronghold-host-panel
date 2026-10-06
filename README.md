@@ -58,6 +58,10 @@ The panel creates `config.json` on first start with the defaults from `lib/core.
 
 You can change these keys in the panel settings: `publicUrl`, `frpcBin`, `frpcConfig`, `sakuraToken`, `nodeName`, `speedLimitMbps`, `dailyLimitGB`, `dailyAutoBroadcast`. Change the other keys in the file, then restart the panel.
 
+## Releases
+
+To make a release, create a release on GitHub with a new tag (for example `v1.1.0`), then publish it. The workflow in `.github/workflows/release.yml` then builds one ZIP each for macOS, Windows, and Linux, and adds the ZIPs to the release. Each ZIP contains only the panel, the docs, the example config, and the start file for that system.
+
 ## Security
 
 - The panel listens on 127.0.0.1 only. It accepts only the `Host` values `localhost:3100` and `127.0.0.1:3100`.

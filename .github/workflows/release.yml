@@ -1,0 +1,32 @@
+# Attach the macOS, Windows and Linux ZIPs to a release.
+# To release: create a release on GitHub with a new tag (for example v1.1.0) and publish it.
+# This workflow then builds the ZIPs from that tag and uploads them to the release.
+name: Release ZIPs
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Existing release tag to rebuild (for example v1.0.0)"
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  zips:
+    runs-on: ubuntu-latest
+    env:
+      TAG: ${{ github.event.release.tag_name || inputs.tag }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.release.tag_name || inputs.tag }}
+      - name: Build ZIPs
+        run: bash .github/build-release.sh "$TAG"
+      - name: Upload to the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "$TAG" dist/*.zip --clobber
