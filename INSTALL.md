@@ -1,4 +1,175 @@
-# Install and setup
+<div align="center">
+
+# 安装指南<br><sub>Install and setup</sub>
+
+macOS · Windows · Linux
+
+[简体中文](#简体中文) · [English](#english) · [返回 README](README.md) · [下载 Download](https://github.com/whyhea1/stronghold-host-panel/releases/latest)
+
+</div>
+
+---
+
+# 简体中文
+
+> 懒人版。**只做一次，大概 15 分钟。** 做完以后，每次开服就是：双击启动文件 → 点「开始联机」。
+>
+> 某一步看不懂，就去看下面英文版的同号步骤，那里写得更细。
+
+## 0. 准备
+
+- 一台电脑：macOS、Windows 10/11 或 Linux 都行
+- 一个 [SakuraFrp](https://www.natfrp.com/) 账号（免费的就够几个人玩）
+- 在国内的话，一个能上 GitHub 的代理软件（Clash Verge、Mihomo Party 之类）
+
+## 1. 装 Node.js
+
+要 22 或更新的版本。挑你的系统，复制那一段：
+
+```bash
+# macOS（Homebrew）
+brew install node@22
+echo 'export PATH="/opt/homebrew/opt/node@22/bin:$PATH"' >> ~/.zshrc
+
+# Windows（PowerShell）
+winget install OpenJS.NodeJS.LTS
+
+# Linux（先装 nvm）
+nvm install 22
+```
+
+装完新开一个终端，输入 `node -v`，显示 `v22` 或更高就对了。
+
+## 2. 下载面板
+
+去 [Releases](https://github.com/whyhea1/stronghold-host-panel/releases/latest) 下载你系统的 zip（`macos` / `windows` / `linux`），解压到桌面。
+
+会用 Git 的也可以直接 `git clone`，以后更新方便。
+
+## 3. 下载 frpc
+
+1. 去 [SakuraFrp 下载页](https://www.natfrp.com/tunnel/download) 下载你系统的 frpc（macOS 选 `darwin`）。苹果芯片和 ARM 选 `arm64`，Intel / AMD 选 `amd64`。一定要用这里的 Sakura 版，GitHub 上的原版 frp 连不上。
+2. 放到这里：
+
+   | 系统 | 放哪 |
+   |---|---|
+   | macOS / Linux | `~/SakuraFrp/frpc` |
+   | Windows | `C:\Users\你的用户名\SakuraFrp\frpc.exe`（下载的文件改名成 `frpc.exe`） |
+
+3. macOS / Linux 再跑一下这两行，让它能运行：
+
+   ```bash
+   chmod +x ~/SakuraFrp/frpc
+   xattr -d com.apple.quarantine ~/SakuraFrp/frpc   # 只有 macOS 需要
+   ```
+
+## 4. 建隧道
+
+在 SakuraFrp 网站上新建隧道，照着填：
+
+| 选项 | 填什么 |
+|---|---|
+| 隧道类型 | TCP |
+| 本地 IP | `127.0.0.1` |
+| 本地端口 | `3000` |
+| 自动 HTTPS | **启用**（必须开，不然朋友打开是 501） |
+| 访问密码 | 不填 |
+
+然后在隧道列表点「操作 → 配置文件」，复制里面的 `-f 访问密钥:隧道ID`，在终端里运行：
+
+```bash
+cd ~/SakuraFrp
+./frpc -f 你的访问密钥:隧道ID -w          # Windows: .\frpc.exe -f 你的访问密钥:隧道ID -w
+```
+
+它会在旁边生成一个 `frpc.ini`。打开看一眼，里面有 `auto_https` 这一行就对了。
+
+以后在网站上改了隧道，就再跑一次这条命令。
+
+## 5. 开着代理的看这里
+
+没开代理软件的直接跳到第 6 步。
+
+开着 Clash / Mihomo 之类（尤其是 TUN 模式）的话，**frpc 必须直连**，不然隧道会断或者很卡。在规则最上面加这三条：
+
+```yaml
+- PROCESS-NAME,frpc,DIRECT          # Windows 写 frpc.exe
+- IP-CIDR,127.0.0.0/8,DIRECT,no-resolve
+- IP-CIDR,192.168.0.0/16,DIRECT,no-resolve
+```
+
+Mihomo Party 的脚本覆写、Surge、sing-box 的写法，看英文版 5.1。
+
+GitHub 那边不用管：面板会自动找你代理的端口（7890、7897、10809 这些）去下载游戏。
+
+## 6. 启动面板
+
+| 系统 | 怎么启动 |
+|---|---|
+| macOS | 双击 `Start-Stronghold-Panel.command`（第一次被拦就右键 → 打开） |
+| Windows | 双击 `Start-Stronghold-Panel.bat`（SmartScreen 拦了就点「更多信息 → 仍要运行」） |
+| Linux | 终端里运行 `./Start-Stronghold-Panel.sh` |
+
+浏览器会自己打开 <http://localhost:3100>。**那个黑色的终端窗口别关**，关了面板就停了。
+
+<img src="docs/images/topbar.png" alt="顶栏">
+
+## 7. 看一眼玩家链接
+
+面板会自己从 `frpc.ini` 读出玩家链接，显示在「玩家入口」里。**`https://` 开头就对了**，什么都不用填。
+
+<img src="docs/images/card-access.png" alt="玩家入口" width="460">
+
+想用别的地址（比如自己的域名），去「设置 → 公网地址」填。留空就是自动。
+
+<details>
+<summary>设置长这样</summary>
+
+<img src="docs/images/card-settings.png" alt="设置" width="420">
+
+</details>
+
+## 8. 装游戏
+
+点「游戏服务器」里的「检查更新」，上面会出现「游戏有新版本」，点「下载并安装」。等进度条走完就好。
+
+<img src="docs/images/banner-update.png" alt="游戏有新版本">
+
+## 9. 测一下
+
+1. 点右上角「开始联机」，等游戏显示「运行中」、隧道显示「已连接」。
+2. 手机**关掉 Wi-Fi**，用流量打开玩家链接。
+3. 能看到「中转站」就成功了。点「进入游戏」开个房间试试。
+
+第一次打开可能会提示证书不安全，点「高级 → 继续访问」就行。
+
+**搞定。以后开服：双击启动文件 → 点「开始联机」→ 发链接。**
+
+## 更新面板
+
+- 用 zip 的：下载新 zip 解压，把旧文件夹里的 `config.json` 和 `usage.json` 复制过去，用新文件夹启动。
+- 用 Git 的：VS Code 里点 Sync，或者 `git pull`，然后重新启动面板。
+
+`config.json` 一般不用碰。所有参数的说明在英文版的 [config.json 表](#configjson)。
+
+## 出问题了
+
+| 情况 | 怎么办 |
+|---|---|
+| 朋友打开显示 `501` | 发 `https://` 的链接。还不行就检查第 4 步的「自动 HTTPS」。 |
+| `https://` 报 SSL 错误 | `frpc.ini` 里没有 `auto_https`。重新跑第 4 步的 `-w` 命令，再在面板里断开、重新连接隧道。 |
+| 隧道连不上 / 很卡，开着代理 | 第 5 步的直连规则没加上。在代理软件的连接列表里看 frpc 是不是 DIRECT。 |
+| 提示「隧道已在线」 | 有旧的 frpc 还连着。点「断开」再点「连接」。还不行就把 Sakura 启动器关掉。 |
+| 红条：端口 3000 被占用 | 点「重启并接管」。 |
+| 检查更新失败 | 打开代理软件。端口不是常见的那几个，就在 `config.json` 里设 `ghProxy`（看英文版 5.2）。 |
+| 游戏启动不了 | `node -v` 要 22 以上。再看面板「日志」里的「游戏」那一栏。 |
+| Mac 不让打开 | 右键 → 打开。或者 `xattr -d com.apple.quarantine 文件名`。 |
+| Windows 拦了 / 杀毒删了 frpc.exe | 「更多信息 → 仍要运行」。杀毒软件里把 `SakuraFrp` 文件夹加白名单。 |
+| Linux 提示解压失败 | `sudo apt install unzip`，再点一次「下载并安装」。 |
+
+---
+
+# English
 
 This guide sets up the panel on a new computer, from nothing to a working player link. The commands are for macOS. Where Windows or Linux is different, a line below the macOS command shows the difference. Do it once. After that, hosting is: double-click the start file, then click 开始联机.
 
@@ -208,6 +379,8 @@ Keep the terminal window open while you host. If you close it, the panel stops t
 
 The panel reads the player link from `frpc.ini`. It uses `server_addr` and `remote_port`, and `https://` when `auto_https` is on. The link shows in the 玩家入口 card. Make sure that it starts with `https://`.
 
+<img src="docs/images/card-access.png" alt="玩家入口 card" width="460">
+
 The panel also finds your node by `server_addr`, and reads the SakuraFrp 访问密钥 from the `user =` line. Thus you usually do not have to enter anything in 设置.
 
 To use a different link, for example a custom domain, enter it in 设置 → 公网地址. To show the status of a different node, enter its name in 设置 → 监控节点. Leave a field empty to go back to the value from `frpc.ini`.
@@ -215,6 +388,8 @@ To use a different link, for example a custom domain, enter it in 设置 → 公
 ## 8. Install the game
 
 Click 检查更新 in the game card. The panel shows 游戏有新版本. Click 下载并安装. The panel downloads the release ZIP from [sganggs/Stronghold-Protocol](https://github.com/sganggs/Stronghold-Protocol) and installs it to `~/StrongholdProtocol/current`.
+
+<img src="docs/images/banner-update.png" alt="Update banner">
 
 ## 9. Test before game night
 
