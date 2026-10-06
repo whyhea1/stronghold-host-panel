@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>备份干员调配 · 卫戍协议</title>
+<link rel="stylesheet" href="/__panel/hub.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' fill='%230c0f0e'/%3E%3Cpath fill='%234ed8af' d='M5 3h3v2h2V3h4v2h2V3h3v5l-2 2v7l2 2v2H5v-2l2-2v-7L5 8z'/%3E%3C/svg%3E">
+<style>
+  .sec { border-top: 1px solid var(--line); padding: 16px 0; }
+  .sec:first-of-type { border-top: 0; padding-top: 0; }
+  .kv { display: grid; grid-template-columns: 88px 1fr; gap: 4px 12px; font-size: 14px; margin: 10px 0 4px; }
+  .kv span:nth-child(odd) { color: var(--lo); }
+  .kv b { font: 600 15px "Bender", ui-monospace, monospace; color: var(--mint); }
+  textarea { width: 100%; min-height: 84px; resize: vertical; margin-top: 10px; padding: 10px 12px; box-sizing: border-box;
+    font: 12px/1.5 ui-monospace, Menlo, monospace; color: var(--hi); background: var(--bg-3); border: 1px solid var(--line-2); outline: none; }
+  textarea:focus { border-color: var(--mint); }
+  .msg { margin-top: 10px; font-size: 13px; min-height: 1.4em; }
+  .msg.ok { color: var(--mint); } .msg.err { color: var(--red); }
+  .preview { display: none; margin-top: 12px; padding: 12px 14px; border: 1px solid var(--line); border-left: 3px solid var(--gold); background: var(--bg-3); }
+  .preview.show { display: block; }
+  .btn.warn { background: var(--gold); color: #1a1400; }
+  input[type=file] { display: none; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="panel">
+    <div class="head">
+      <span class="hex" aria-hidden="true"></span>
+      <div style="flex:1;min-width:0">
+        <div class="micro">Stronghold Protocol · Loadout Backup</div>
+        <h1>干员调配备份</h1>
+      </div>
+      <a class="btn sm ghost" href="/">中转站</a>
+    </div>
+    <div class="body">
+
+      <div class="sec">
+        <div class="micro">This browser · 本浏览器当前保存</div>
+        <div class="kv">
+          <span>玩家名</span><span id="curName">—</span>
+          <span>干员调配</span><span><b id="curOps">0</b> 名干员有自定义技能 / 模组</span>
+          <span>地址</span><span id="curOrigin" class="dim" style="word-break:break-all"></span>
+        </div>
+        <div class="foot" style="margin-top:6px">干员调配只存在你的浏览器里，按“网址”分开保存。换设备、换浏览器、清理浏览器数据，或者房主换了地址，都需要用备份恢复。</div>
+      </div>
+
+      <div class="sec">
+        <div class="micro">Back up · 备份</div>
+        <div class="actions" style="margin-top:10px">
+          <button class="btn" id="dl">下载备份文件</button>
+          <button class="btn ghost" id="cp">复制备份码</button>
+        </div>
+        <div class="msg" id="outMsg"></div>
+      </div>
+
+      <div class="sec">
+        <div class="micro">Restore · 恢复</div>
+        <div class="foot" style="margin-top:6px">先关掉所有正在玩的游戏页面再恢复，不然游戏可能会用旧数据覆盖。</div>
+        <div class="actions" style="margin-top:10px">
+          <button class="btn ghost" id="pick">选择备份文件</button>
+          <input type="file" id="file" accept=".json,application/json,text/plain">
+        </div>
+        <textarea id="code" placeholder="或者把备份码粘贴到这里" spellcheck="false"></textarea>
+        <div class="preview" id="preview">
+          <div class="micro" style="color:var(--gold)">即将恢复 · Will restore</div>
+          <div class="kv" id="pv"></div>
+          <div class="actions" style="margin-top:12px">
+            <button class="btn warn" id="apply">覆盖并恢复</button>
+            <button class="btn ghost" id="cancel">取消</button>
+          </div>
+        </div>
+        <div class="msg" id="inMsg"></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+<script>
+  // Same origin as the game, so this page reads/writes the exact localStorage keys the game uses:
+  //   sp.name          player name
+  //   sp.pref.*        loadout (sp.pref.loadout) and lobby preferences
+  // Reconnect tokens (sp.tokens) are deliberately left out: they are tied to one server session.
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const keep = (k) => k === "sp.name" || k.startsWith("sp.pref.");
+  const MARK = "SP1:";
+
+  function snapshot() {
+    const data = {};
+    for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (k && keep(k)) data[k] = localStorage.getItem(k); }
+    return { app: "stronghold-protocol", v: 1, from: location.origin, at: new Date().toISOString(), data };
+  }
+  function opsIn(data) {
+    try { const l = JSON.parse(data["sp.pref.loadout"] || "null"); const e = l && (l.entries || l); return e && typeof e === "object" ? Object.keys(e).length : 0; } catch { return 0; }
+  }
+  function nameIn(data) { const v = data["sp.name"]; if (v == null) return ""; try { const j = JSON.parse(v); return typeof j === "string" ? j : v; } catch { return v; } }
+  const b64e = (s) => { const b = new TextEncoder().encode(s); let t = ""; for (let i = 0; i < b.length; i += 8192) t += String.fromCharCode(...b.subarray(i, i + 8192)); return btoa(t); };
+  const b64d = (s) => new TextDecoder().decode(Uint8Array.from(atob(s), (c) => c.charCodeAt(0)));
+
+  function showCurrent() {
+    const s = snapshot();
+    $("curName").textContent = nameIn(s.data) || "（未设置）";
+    $("curOps").textContent = opsIn(s.data);
+    $("curOrigin").textContent = location.origin;
+  }
+  showCurrent();
+
+  const say = (el, text, ok) => { el.textContent = text; el.className = "msg " + (ok ? "ok" : "err"); };
+  function guardEmpty() {
+    const s = snapshot();
+    if (!Object.keys(s.data).length) { say($("outMsg"), "这个浏览器里还没有任何游戏数据可以备份。", false); return null; }
+    return s;
+  }
+
+  $("dl").onclick = () => {
+    const s = guardEmpty(); if (!s) return;
+    const blob = new Blob([JSON.stringify(s, null, 2)], { type: "application/json" });
+    const a = document.createElement("a");
+    const d = new Date(Date.now() + 8 * 3600e3).toISOString().slice(0, 10).replace(/-/g, "");
+    a.href = URL.createObjectURL(blob); a.download = `stronghold-loadout-${d}.json`;
+    document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+    say($("outMsg"), `已下载（${opsIn(s.data)} 名干员）。`, true);
+  };
+  $("cp").onclick = async () => {
+    const s = guardEmpty(); if (!s) return;
+    const code = MARK + b64e(JSON.stringify(s));
+    try { await navigator.clipboard.writeText(code); say($("outMsg"), "备份码已复制，可以发到微信 / QQ 自己收藏。", true); }
+    catch { $("code").value = code; $("code").select(); say($("outMsg"), "无法自动复制（非 HTTPS 或浏览器限制），已放进下方输入框，请手动复制。", false); }
+  };
+
+  let pending = null;
+  function parse(text) {
+    text = String(text || "").trim();
+    if (!text) throw new Error("空的");
+    const obj = JSON.parse(text.startsWith(MARK) ? b64d(text.slice(MARK.length).replace(/\s+/g, "")) : text);
+    if (!obj || obj.app !== "stronghold-protocol" || typeof obj.data !== "object") throw new Error("不是卫戍协议的备份");
+    const data = {};
+    for (const [k, v] of Object.entries(obj.data)) if (keep(k) && typeof v === "string" && v.length < 200000) data[k] = v;
+    if (!Object.keys(data).length) throw new Error("备份里没有可恢复的数据");
+    return { ...obj, data };
+  }
+  function preview(obj) {
+    pending = obj;
+    $("pv").innerHTML = `<span>玩家名</span><span>${esc(nameIn(obj.data) || "（无）")}</span>
+      <span>干员调配</span><span><b>${opsIn(obj.data)}</b> 名干员</span>
+      <span>备份时间</span><span>${esc(obj.at ? new Date(obj.at).toLocaleString("zh-CN", { timeZone: "Asia/Shanghai", hour12: false }) : "?")}</span>
+      <span>来自</span><span class="dim" style="word-break:break-all">${esc(obj.from || "?")}</span>`;
+    $("preview").classList.add("show"); $("inMsg").textContent = "";
+  }
+  function tryPreview(text) {
+    try { preview(parse(text)); } catch (e) { $("preview").classList.remove("show"); pending = null; say($("inMsg"), "读不出来：" + e.message, false); }
+  }
+  $("pick").onclick = () => $("file").click();
+  $("file").onchange = async () => { const f = $("file").files[0]; if (f) tryPreview(await f.text()); $("file").value = ""; };
+  $("code").addEventListener("input", () => { const t = $("code").value.trim(); if (t.startsWith(MARK) || t.startsWith("{")) tryPreview(t); });
+  $("cancel").onclick = () => { pending = null; $("preview").classList.remove("show"); };
+  $("apply").onclick = () => {
+    if (!pending) return;
+    for (let i = localStorage.length - 1; i >= 0; i--) { const k = localStorage.key(i); if (k && k.startsWith("sp.pref.")) localStorage.removeItem(k); }
+    for (const [k, v] of Object.entries(pending.data)) localStorage.setItem(k, v);
+    $("preview").classList.remove("show"); pending = null; $("code").value = "";
+    showCurrent();
+    $("inMsg").innerHTML = `<span class="ok">已恢复。</span> <a class="btn sm" href="/play" style="margin-left:8px">进入游戏</a>`; $("inMsg").className = "msg ok";
+  };
+</script>
+</body>
+</html>

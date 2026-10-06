@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>服务器离线 · 卫戍协议</title>
+<link rel="stylesheet" href="/__panel/hub.css">
+<style>body { display: flex; align-items: center; justify-content: center; } .wrap { max-width: 520px; width: 100%; }</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="panel off" id="card">
+    <div class="head">
+      <span class="hex" aria-hidden="true"></span>
+      <div style="flex:1;min-width:0">
+        <div class="micro">Stronghold Protocol · Offline</div>
+        <h1>游戏暂时不在线</h1>
+      </div>
+      <span class="state bad" id="state">离线</span>
+    </div>
+    <div class="body">
+      <div class="notice" id="notice"><div class="micro" style="color:var(--gold)">房主公告 · Notice</div><div id="noticetext" style="margin-top:4px"></div></div>
+      <p>房主的服务器暂未开放，或正在重启 / 更新。</p>
+      <p>不用刷新，服务器恢复后本页会自动带你进入游戏。</p>
+      <p class="en">The host's game server is offline or restarting. This page forwards you automatically when it's back.</p>
+      <div class="actions"><a class="btn ghost" href="/">查看中转站</a></div>
+      <div class="foot">长时间无法进入时，请联系房主检查隧道或游戏服务。</div>
+    </div>
+  </div>
+</div>
+<script>
+  // live push when available; polling otherwise
+  function apply(d) {
+    document.getElementById("noticetext").textContent = [d.notice, d.autoNotice].filter(Boolean).join("　·　");
+    document.getElementById("notice").classList.toggle("show", !!(d.notice || d.autoNotice));
+    if (d.online) {
+      const s = document.getElementById("state");
+      s.textContent = "已恢复，正在进入…"; s.className = "state";
+      document.getElementById("card").classList.remove("off");
+      setTimeout(() => location.reload(), 700);
+      return true;
+    }
+  }
+  if (window.EventSource) { const es = new EventSource("/__panel/events"); es.onmessage = (ev) => { if (apply(JSON.parse(ev.data))) es.close(); }; }
+  async function tick() {
+    try { if (apply(await (await fetch("/status.json", { cache: "no-store" })).json())) return; } catch (e) {}
+    setTimeout(tick, 4000);
+  }
+  tick();
+</script>
+</body>
+</html>

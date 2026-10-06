@@ -1,0 +1,9 @@
+# local machine state (the panel creates these at run time)
+config.json
+usage.json
+
+# macOS / editors
+.DS_Store
+.vscode/
+*.log
+node_modules/

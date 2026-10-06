@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>卫戍协议 · 主机面板</title>
+<script>
+  // resolve theme before first paint: "auto" follows macOS appearance
+  (function () {
+    var q = new URLSearchParams(location.search).get("theme");
+    var pref = q || localStorage.getItem("sh-theme") || "auto";
+    var dark = pref === "dark" || (pref === "auto" && matchMedia("(prefers-color-scheme: dark)").matches);
+    document.documentElement.dataset.theme = dark ? "dark" : "light";
+    document.documentElement.dataset.pref = pref;
+  })();
+</script>
+<link rel="stylesheet" href="/app.css">
+</head>
+<body>
+<div class="bg" aria-hidden="true"></div>
+
+<header class="top">
+  <div class="brand">
+    <span class="hex" aria-hidden="true"></span>
+    <div>
+      <div class="micro">Stronghold Protocol · Host</div>
+      <div class="brand-title">卫戍协议 · 主机面板</div>
+    </div>
+  </div>
+  <div class="strip">
+    <div class="sitem"><span class="micro">Game</span><span class="state val" id="hgame">—</span></div>
+    <div class="sitem"><span class="micro">Tunnel</span><span class="state val" id="htun">—</span></div>
+    <div class="sitem"><span class="micro">Hub</span><span class="state val" id="hhub">—</span></div>
+    <div class="sitem"><span class="micro">Players</span><span class="num val" id="hplayers">—</span></div>
+    <div class="sitem"><span class="micro">Tunnel ↓↑</span><span class="num val" id="hbw">—</span></div>
+    <div class="sitem sitem--quota" id="hq"><span class="micro">Today · 流量</span><span class="num val" id="hquota">—</span><span class="sbar"><i id="hqbar"></i></span></div>
+    <div class="sitem"><span class="micro">Version</span><span class="num val" id="ver">—</span></div>
+  </div>
+  <div class="top-actions">
+    <button class="btn btn--primary" id="btnsession">开始联机</button>
+    <button class="btn btn--danger" id="btnstopall">全部停止</button>
+    <button class="btn btn--ghost btn--icon" id="btntheme" title="主题：自动 / 浅色 / 深色">自动</button>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <!-- alerts: only rendered when relevant -->
+  <div class="alert alert--bad hidden" id="hubwarn">
+    <div class="a-body"><b>端口 :<span class="num" id="hubport">3000</span> 被其他进程占用</b>
+      <div class="hint">中转站、离线页和公告暂时不可用，玩家会直接连到旧进程。点「重启」会清掉占用进程并接管端口。</div></div>
+    <button class="btn btn--sm" data-act="restartGame">重启并接管</button>
+  </div>
+
+  <div class="alert hidden" id="usagebanner">
+    <div class="a-body"><b id="usagetitle">今日流量已用 80%</b>
+      <div class="hint" id="usagehint">不会自动停服，只是提醒你。</div></div>
+    <button class="btn btn--sm" id="btnusageclear" data-act="clearAutoNotice">撤下玩家提醒</button>
+    <button class="btn btn--sm btn--primary" id="btnusagesend" data-act="sendUsageNotice">提醒玩家</button>
+  </div>
+
+  <div class="alert hidden" id="signbanner">
+    <div class="a-body"><b>今日 SakuraFrp 免费流量还没签到</b>
+      <div class="hint">官方 API 不提供签到接口，只能在主站完成。打开后点「点击签到」即可。</div></div>
+    <button class="btn btn--sm btn--primary" data-act="openCheckin">去签到</button>
+  </div>
+
+  <div class="alert alert--mint hidden" id="updatecard">
+    <div class="a-body"><b>游戏有新版本 <span class="num" id="updtag"></span></b>
+      <span class="dim num" id="updsize"></span>
+      <div class="hint" id="updroute">下载期间游戏继续运行；安装时玩家会看到离线页和你的公告，装好后自动重启。旧版本保留在 previous/。</div>
+      <div class="bar hidden" id="updbar"><i id="updprog"></i></div></div>
+    <button class="btn btn--sm btn--primary" id="btnupd" data-act="applyUpdate">下载并安装</button>
+  </div>
+
+  <div class="grid">
+
+    <!-- ============ column 1: operations ============ -->
+    <div class="col">
+      <section class="panel panel--mint">
+        <header class="ph">
+          <div><div class="micro">01 · Game server</div><h2>游戏服务器</h2></div>
+          <span class="state" id="gamestate">—</span>
+        </header>
+        <div class="pb">
+          <dl class="kv">
+            <dt>版本</dt><dd class="num" id="gver">—</dd>
+            <dt>运行时长</dt><dd class="num" id="gup">—</dd>
+            <dt>监听</dt><dd class="num" id="gport">—</dd>
+          </dl>
+          <div class="btns">
+            <button class="btn btn--primary" data-act="startGame">启动</button>
+            <button class="btn" data-act="restartGame" title="停止、清理占用端口的旧进程，再启动">重启</button>
+            <button class="btn btn--danger" data-act="stopGame">停止</button>
+          </div>
+          <div class="btns" style="margin-top:8px">
+            <button class="btn btn--ghost btn--sm" data-act="openLobby">打开大厅</button>
+            <button class="btn btn--ghost btn--sm" data-act="checkUpdate">检查更新</button>
+            <button class="btn btn--ghost btn--sm" data-act="openGameFolder">游戏目录</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <header class="ph">
+          <div><div class="micro">02 · SakuraFrp tunnel</div><h2>穿透隧道</h2></div>
+          <span class="state" id="tunstate">—</span>
+        </header>
+        <div class="pb">
+          <dl class="kv">
+            <dt>公网地址</dt><dd class="num" id="tunaddr">—</dd>
+            <dt>节点</dt><dd id="tunnode">—</dd>
+          </dl>
+          <div class="btns">
+            <button class="btn btn--primary" data-act="startTunnel">连接</button>
+            <button class="btn btn--danger" data-act="stopTunnel">断开</button>
+          </div>
+          <div class="hint">frpc 以命令行运行，不需要打开 Sakura 启动器。断开时会顺便清理残留的 frpc 进程，避免「隧道已在线」。</div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <header class="ph">
+          <div><div class="micro">03 · Account</div><h2>SakuraFrp 账户</h2></div>
+          <span class="state" id="nodestate">—</span>
+        </header>
+        <div class="pb" id="sakuraacct"><div class="empty">正在连接 api.natfrp.com…</div></div>
+      </section>
+
+      <details class="panel settings" id="settings">
+        <summary class="ph">
+          <div><div class="micro">04 · Settings</div><h2>设置</h2></div>
+          <span class="ph-r"><span class="chev">›</span></span>
+        </summary>
+        <div class="pb">
+          <div class="form-grid">
+            <label>公网地址（发给玩家）<input class="input" id="cfgurl" placeholder="https://node.example.com:12345"></label>
+            <label>监控节点<input class="input" id="cfgnode" placeholder="示例节点"></label>
+            <label>frpc 程序路径<input class="input" id="cfgbin"></label>
+            <label>frpc 配置路径<input class="input" id="cfgcfg"></label>
+            <label>SakuraFrp 访问密钥<input class="input" id="cfgtok" type="password" autocomplete="off"></label>
+            <label>带宽上限 (Mbps)<input class="input" id="cfgspeed" inputmode="numeric"></label>
+            <label>每日流量上限 (GiB)<input class="input" id="cfgdaily" inputmode="decimal"></label>
+            <label class="check"><input type="checkbox" id="cfgautob"> 到 80% / 95% / 100% 时自动提醒玩家</label>
+          </div>
+          <div class="btns"><button class="btn btn--primary" id="btnsave">保存设置</button></div>
+          <div class="hint">访问密钥留空则保留已保存的值，或自动从 frpc.ini 的 <code>user =</code> 读取。</div>
+        </div>
+      </details>
+    </div>
+
+    <!-- ============ column 2: players ============ -->
+    <div class="col">
+      <section class="panel panel--mint">
+        <header class="ph">
+          <div><div class="micro">05 · Access</div><h2>玩家入口</h2></div>
+          <span class="ph-r micro">send to players</span>
+        </header>
+        <div class="pb share-wrap"><div class="share">
+          <div style="min-width:0">
+            <div class="label-row"><span class="micro">Player link · 玩家链接</span><span class="dim" style="font-size:12px">先到中转站，看人数和房间</span></div>
+            <div class="field"><span class="val big" id="plink">—</span><button class="btn btn--ghost" data-copy="publicUrl">复制</button><button class="btn btn--ghost" data-act="openHub">打开</button></div>
+            <div class="label-row"><span class="micro">Direct · 直接进游戏</span><span class="dim" style="font-size:12px">跳过中转站</span></div>
+            <div class="field"><span class="val" id="hublink">—</span><button class="btn btn--ghost" data-copy="playUrl">复制</button></div>
+          </div>
+          <div class="qr-row"><div id="qr" class="hidden" title="手机用流量扫码测试"></div><div class="hint">手机关掉 Wi-Fi、用流量扫码，可以在开局前先测一遍外网能不能进。</div></div>
+        </div></div>
+      </section>
+
+      <section class="panel">
+        <header class="ph">
+          <div><div class="micro">06 · Broadcast</div><h2>全员公告</h2></div>
+          <span class="state" id="noticestate">—</span>
+        </header>
+        <div class="pb">
+          <div class="row">
+            <input class="input" id="noticetext" maxlength="200" placeholder="例：5 分钟后重启服务器更新游戏">
+            <button class="btn btn--primary" id="btnnotice">发布</button>
+            <button class="btn btn--danger" id="btnnotclear">撤下</button>
+          </div>
+          <div class="chips">
+            <button class="chip">5 分钟后重启服务器更新游戏，请尽快结束对局</button>
+            <button class="chip">服务器正在更新，几分钟后回来</button>
+            <button class="chip">服务器即将关闭，感谢游玩</button>
+          </div>
+          <div class="live-notice off" id="noticecur">当前没有公告</div>
+          <div class="hint">5 秒内出现在所有玩家屏幕顶部，包括对局中、中转站和离线页。</div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <header class="ph"><div><div class="micro">07 · LAN</div><h2>局域网</h2></div></header>
+        <div class="pb">
+          <div id="lanlist"></div>
+          <div class="hint">同一 Wi-Fi / 网线下的设备直接用这个地址，不走隧道、不占流量，延迟最低。</div>
+        </div>
+      </section>
+    </div>
+
+    <!-- ============ column 3: live ============ -->
+    <div class="col-live">
+      <div class="sub">
+        <section class="panel">
+          <header class="ph">
+            <div><div class="micro">08 · Live</div><h2>战况</h2></div>
+            <span class="ph-r num" id="healthmeta"></span>
+          </header>
+          <div class="pb live-pb">
+            <div class="tiles" id="livestats"></div>
+            <div class="tbl-wrap" id="rooms"></div>
+            <ul class="feed" id="activity"></ul>
+          </div>
+        </section>
+
+
+      </div>
+
+      <div class="sub">
+        <section class="panel">
+          <header class="ph">
+            <div><div class="micro">09 · Peers</div><h2>当前连接</h2></div>
+            <span class="ph-r num" id="conncount"></span>
+          </header>
+          <div class="pb">
+            <div id="conntable"></div>
+            <div class="hint">「隧道」来自 SakuraFrp，所有外网玩家共用 127.0.0.1（frpc），看 socket 数判断热度；「局域网」显示真实设备 IP。</div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <header class="ph">
+            <div><div class="micro">10 · Bandwidth</div><h2>隧道流量</h2></div>
+            <span class="ph-r">上限 <span class="num" id="bwlim">10</span> Mbps</span>
+          </header>
+          <div class="pb">
+            <div class="quota" id="quota">
+              <div class="quota-h"><span class="micro">Today · 今日用量 (UTC+8)</span><span class="tag hidden" id="qtag"></span></div>
+              <div class="quota-v"><span class="num" id="qused">0.00</span><small>/ <span id="qlim">2</span> GiB</small><span class="num quota-p" id="qpct">0%</span></div>
+              <div class="gauge gauge--quota"><i id="qbar"></i><span class="tick" style="left:80%"></span><span class="tick" style="left:95%"></span></div>
+              <div class="hint" id="qsrc"></div>
+              <div class="btns" style="margin-top:8px"><button class="btn btn--sm btn--ghost" data-act="sendUsageNotice">发送流量提醒</button><button class="btn btn--sm btn--ghost hidden" id="qclear" data-act="clearAutoNotice">撤下提醒</button></div>
+            </div>
+            <div class="bw">
+              <div><div class="micro">Down · 玩家上传</div><div class="v"><span id="bwin">0.00</span><small>Mbps</small></div></div>
+              <div><div class="micro">Up · 发给玩家</div><div class="v"><span id="bwout">0.00</span><small>Mbps</small></div></div>
+            </div>
+            <div class="gauge"><i id="bwbar"></i></div>
+            <div class="gauge-l"><span>0</span><span id="bwpct">0%</span><span id="bwlim2">10</span></div>
+            <svg class="spark" id="spark" viewBox="0 0 90 40" preserveAspectRatio="none" aria-label="最近 3 分钟隧道流量"></svg>
+            <div class="hint" id="bwtot"></div>
+          </div>
+        </section>
+
+
+      </div>
+    </div>
+  </div>
+
+  <section class="panel">
+    <header class="ph">
+      <div><div class="micro">11 · Logs</div><h2>日志</h2></div>
+      <span class="ph-r micro">UTC+8</span>
+    </header>
+    <div class="pb">
+      <div class="logbar">
+        <div class="seg" id="logtabs">
+          <button data-t="all" class="active">全部</button>
+          <button data-t="panel">面板</button>
+          <button data-t="game">游戏</button>
+          <button data-t="tunnel">隧道</button>
+        </div>
+        <input class="input" id="logfilter" placeholder="筛选…">
+        <span class="sp"></span>
+        <button class="btn btn--sm is-on" id="btnscroll">自动滚动</button>
+        <button class="btn btn--sm btn--ghost" id="btnclear">清屏</button>
+      </div>
+      <div id="logbox"></div>
+    </div>
+  </section>
+</main>
+
+<div class="toast" id="toast"></div>
+<script src="/qrcodegen.js"></script>
+<script src="/app.js"></script>
+</body>
+</html>

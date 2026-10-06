@@ -1,0 +1,24 @@
+{
+  "repo": "sganggs/Stronghold-Protocol",
+  "gameRoot": "~/StrongholdProtocol",
+  "port": 3000,
+  "gameInternalPort": 3001,
+  "panelPort": 3100,
+  "publicUrl": "https://node.example.com:12345",
+  "frpcBin": "~/SakuraFrp/frpc",
+  "frpcConfig": "~/SakuraFrp/frpc.ini",
+  "ghProxy": "auto",
+  "proxyPorts": [
+    7890,
+    7897,
+    10809,
+    1080
+  ],
+  "ghMirrors": [
+    "https://ghfast.top/",
+    "https://gh-proxy.com/"
+  ],
+  "nodeName": "示例节点",
+  "dailyLimitGB": 2,
+  "dailyAutoBroadcast": true
+}
