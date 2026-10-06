@@ -12,160 +12,309 @@ macOS · Windows · Linux
 
 # 简体中文
 
-> 懒人版。**只做一次，大概 15 分钟。** 做完以后，每次开服就是：双击启动文件 → 点「开始联机」。
->
-> 某一步看不懂，就去看下面英文版的同号步骤，那里写得更细。
+本指南在一台新电脑上从零配置面板，直到得到可用的玩家链接。命令以 macOS 为准；Windows 或 Linux 有差异时，在 macOS 命令下方单独列出。整个流程只需做一次，之后开服只需运行启动文件并点击「开始联机」。
 
-## 0. 准备
+## 准备
 
-- 一台电脑：macOS、Windows 10/11 或 Linux 都行
-- 一个 [SakuraFrp](https://www.natfrp.com/) 账号（免费的就够几个人玩）
-- 在国内的话，一个能上 GitHub 的代理软件（Clash Verge、Mihomo Party 之类）
+| 项目 | 获取方式 | 说明 |
+|---|---|---|
+| macOS、Windows 10/11 或 Linux | | Apple 芯片或 Intel，x64 或 ARM |
+| Node.js 22 或更高 | Homebrew / winget / nvm | 游戏要求 Node 22 或更高 |
+| Git | Xcode 命令行工具 / Git for Windows / 包管理器 | 仅在克隆仓库和获取更新时需要 |
+| SakuraFrp 账号 | [natfrp.com](https://www.natfrp.com/) | 免费套餐足够少量玩家使用 |
+| SakuraFrp `frpc`（命令行） | `~/SakuraFrp/frpc`（Windows：`frpc.exe`） | 不需要 SakuraFrp 启动器 |
+| 代理软件（可选） | | 仅在访问 GitHub 需要代理时使用，规则见第 5 步 |
 
-## 1. 装 Node.js
-
-要 22 或更新的版本。挑你的系统，复制那一段：
+## 1. 安装 Node.js 22
 
 ```bash
-# macOS（Homebrew）
 brew install node@22
 echo 'export PATH="/opt/homebrew/opt/node@22/bin:$PATH"' >> ~/.zshrc
-
-# Windows（PowerShell）
-winget install OpenJS.NodeJS.LTS
-
-# Linux（先装 nvm）
-nvm install 22
+source ~/.zshrc
+node -v
 ```
 
-装完新开一个终端，输入 `node -v`，显示 `v22` 或更高就对了。
+最后一条命令应输出 `v22.x` 或更高。Intel Mac 上 Homebrew 的路径是 `/usr/local/opt/node@22/bin`，启动文件两个路径都会查找。
 
-## 2. 下载面板
+- Windows（PowerShell）：`winget install OpenJS.NodeJS.LTS` 和 `winget install Git.Git`，然后新开一个窗口运行 `node -v`。
+- Linux：安装 [nvm](https://github.com/nvm-sh/nvm#installing-and-updating)，然后运行 `nvm install 22`。发行版自带的 Node 版本通常低于 22。另需安装 `git`、`curl`、`unzip`（Debian/Ubuntu：`sudo apt install git curl unzip`）。
 
-去 [Releases](https://github.com/whyhea1/stronghold-host-panel/releases/latest) 下载你系统的 zip（`macos` / `windows` / `linux`），解压到桌面。
+## 2. 获取面板
 
-会用 Git 的也可以直接 `git clone`，以后更新方便。
+最简单的方式：从 [Releases](https://github.com/whyhea1/stronghold-host-panel/releases/latest) 下载对应系统的 ZIP（`macos`、`windows` 或 `linux`），解压到桌面。这种方式不需要 Git。
 
-## 3. 下载 frpc
+如需用 Git 获取更新，改为克隆仓库。在 VS Code 中：
 
-1. 去 [SakuraFrp 下载页](https://www.natfrp.com/tunnel/download) 下载你系统的 frpc（macOS 选 `darwin`）。苹果芯片和 ARM 选 `arm64`，Intel / AMD 选 `amd64`。一定要用这里的 Sakura 版，GitHub 上的原版 frp 连不上。
-2. 放到这里：
+1. 按 Cmd+Shift+P（Windows 和 Linux：Ctrl+Shift+P），输入 `Git: Clone`，选择「Clone from GitHub」。
+2. 选择 `whyhea1/stronghold-host-panel`。
+3. 位置选桌面，然后打开该文件夹。
 
-   | 系统 | 放哪 |
-   |---|---|
-   | macOS / Linux | `~/SakuraFrp/frpc` |
-   | Windows | `C:\Users\你的用户名\SakuraFrp\frpc.exe`（下载的文件改名成 `frpc.exe`） |
+终端中的等效命令（PowerShell 中同样可用）：
 
-3. macOS / Linux 再跑一下这两行，让它能运行：
+```bash
+cd ~/Desktop
+git clone https://github.com/whyhea1/stronghold-host-panel.git
+```
+
+macOS 提示安装命令行开发者工具时，选择安装。这一步会安装 Git。
+
+## 3. 安装 SakuraFrp 命令行客户端
+
+1. 从 [SakuraFrp 下载页](https://www.natfrp.com/tunnel/download) 下载对应系统的 `frpc`：macOS 选 `darwin`，Windows 选 `windows`，Linux 选 `linux`。Apple 芯片和 ARM 选 `arm64`，Intel 和 AMD 选 `amd64`。原版 frp 无法连接 SakuraFrp。
+2. 移动到固定位置，并去掉 macOS 的隔离标记：
 
    ```bash
+   mkdir -p ~/SakuraFrp
+   mv ~/Downloads/frpc_*_darwin_*/frpc ~/SakuraFrp/
    chmod +x ~/SakuraFrp/frpc
-   xattr -d com.apple.quarantine ~/SakuraFrp/frpc   # 只有 macOS 需要
+   xattr -d com.apple.quarantine ~/SakuraFrp/frpc 2>/dev/null
+   ~/SakuraFrp/frpc -V
    ```
 
-## 4. 建隧道
+   - Linux：命令相同，去掉 `xattr` 那一行。
+   - Windows：新建文件夹 `C:\Users\<用户名>\SakuraFrp`，把文件放进去并改名为 `frpc.exe`。然后在 PowerShell 中运行 `~\SakuraFrp\frpc.exe -V`。
 
-在 SakuraFrp 网站上新建隧道，照着填：
+3. 确认版本号中含有 `sakura`。请使用最新版；低于 `0.51.0-sakura-7` 的版本处理自动 HTTPS 有问题。
 
-| 选项 | 填什么 |
+## 4. 创建隧道
+
+> SakuraFrp 官方文档：[内网穿透基础知识](https://doc.natfrp.com/basics.html) · [实名认证](https://doc.natfrp.com/faq/realname.html) · [Web 应用穿透指南（选择节点、创建 TCP 隧道）](https://doc.natfrp.com/app/http.html) · [自动 HTTPS](https://doc.natfrp.com/frpc/auto-https.html) · [frpc 基本使用指南](https://doc.natfrp.com/frpc/usage.html)
+
+在 SakuraFrp 网站上新建隧道，参数如下：
+
+| 字段 | 值 |
 |---|---|
 | 隧道类型 | TCP |
 | 本地 IP | `127.0.0.1` |
-| 本地端口 | `3000` |
-| 自动 HTTPS | **启用**（必须开，不然朋友打开是 501） |
-| 访问密码 | 不填 |
+| 本地端口 | `3000`（即 `config.json` 中的 `port`） |
+| 自动 HTTPS | 启用 |
+| 访问密码 | 留空 |
 
-然后在隧道列表点「操作 → 配置文件」，复制里面的 `-f 访问密钥:隧道ID`，在终端里运行：
+国内节点会拦截经 TCP 隧道传输的明文 HTTP，玩家会看到 `501 Not Implemented`。启用自动 HTTPS 后，`frpc` 接收玩家的 HTTPS 请求，再以明文 HTTP 转发给面板。因此玩家链接必须以 `https://` 开头（[SakuraFrp 自动 HTTPS 文档](https://doc.natfrp.com/frpc/auto-https.html)）。
+
+然后把隧道配置写入本地。在隧道列表中打开「操作 → 配置文件」，复制启动参数（`-f 访问密钥:隧道ID`）：
 
 ```bash
 cd ~/SakuraFrp
-./frpc -f 你的访问密钥:隧道ID -w          # Windows: .\frpc.exe -f 你的访问密钥:隧道ID -w
+./frpc -f 你的访问密钥:隧道ID -w
+grep auto_https frpc.ini
 ```
 
-它会在旁边生成一个 `frpc.ini`。打开看一眼，里面有 `auto_https` 这一行就对了。
+Windows（PowerShell）：`cd ~\SakuraFrp`，然后 `.\frpc.exe -f 你的访问密钥:隧道ID -w`，再运行 `Select-String auto_https frpc.ini`。
 
-以后在网站上改了隧道，就再跑一次这条命令。
+`grep`（或 `Select-String`）必须输出一行 `auto_https`。如果没有输出，说明网站没有保存自动 HTTPS 设置：重新保存后，再运行一次 `-w` 命令。
 
-## 5. 开着代理的看这里
+以后每次在网站上修改隧道，都要重新运行 `-w` 命令，然后在面板中重启隧道。
 
-没开代理软件的直接跳到第 6 步。
+## 5. 代理软件设置
 
-开着 Clash / Mihomo 之类（尤其是 TUN 模式）的话，**frpc 必须直连**，不然隧道会断或者很卡。在规则最上面加这三条：
+如果开服时电脑上开着代理软件，请完成这一步。系统代理、TUN 模式、虚拟网卡类的软件都算。没有使用代理的，直接跳到第 6 步。
+
+代理软件会在三个地方影响面板：
+
+| 流量 | 应走 | 原因 |
+|---|---|---|
+| `frpc` 到 SakuraFrp 节点 | 直连 | 隧道经代理连国内节点会失败或延迟高 |
+| 玩家到中转站（127.0.0.1、局域网） | 直连 | 本地流量，大多数代理软件默认已直连 |
+| 面板、`git`、VS Code 到 GitHub | 走代理 | 游戏下载、游戏更新、面板更新 |
+
+### 5.1 让 frpc 直连
+
+TUN 模式、增强模式等接管全部流量的模式下必须设置。仅系统代理模式下 `frpc` 不走代理，但仍建议加上规则，避免以后切换模式时隧道断开。
+
+把以下规则放在规则列表最上面（越靠上优先级越高）。Windows 上进程名是 `frpc.exe`，写成 `PROCESS-NAME,frpc.exe,DIRECT`（sing-box 写 `"frpc.exe"`）。
+
+Clash 格式 YAML 规则（写在软件的覆写 / merge 功能中）：
 
 ```yaml
-- PROCESS-NAME,frpc,DIRECT          # Windows 写 frpc.exe
-- IP-CIDR,127.0.0.0/8,DIRECT,no-resolve
-- IP-CIDR,192.168.0.0/16,DIRECT,no-resolve
+rules:
+  - PROCESS-NAME,frpc,DIRECT
+  - IP-CIDR,127.0.0.0/8,DIRECT,no-resolve
+  - IP-CIDR,192.168.0.0/16,DIRECT,no-resolve
 ```
 
-Mihomo Party 的脚本覆写、Surge、sing-box 的写法，看英文版 5.1。
+JavaScript 脚本覆写：
 
-GitHub 那边不用管：面板会自动找你代理的端口（7890、7897、10809 这些）去下载游戏。
+```js
+function main(config) {
+  config.rules = [
+    "PROCESS-NAME,frpc,DIRECT",
+    "IP-CIDR,127.0.0.0/8,DIRECT,no-resolve",
+    "IP-CIDR,192.168.0.0/16,DIRECT,no-resolve",
+    ...(config.rules || []),
+  ];
+  return config;
+}
+```
 
-## 6. 启动面板
+Surge 格式规则（`[Rule]` 段）：
 
-| 系统 | 怎么启动 |
-|---|---|
-| macOS | 双击 `Start-Stronghold-Panel.command`（第一次被拦就右键 → 打开） |
-| Windows | 双击 `Start-Stronghold-Panel.bat`（SmartScreen 拦了就点「更多信息 → 仍要运行」） |
-| Linux | 终端里运行 `./Start-Stronghold-Panel.sh` |
+```ini
+PROCESS-NAME,frpc,DIRECT
+IP-CIDR,127.0.0.0/8,DIRECT,no-resolve
+IP-CIDR,192.168.0.0/16,DIRECT,no-resolve
+```
 
-浏览器会自己打开 <http://localhost:3100>。**那个黑色的终端窗口别关**，关了面板就停了。
+sing-box JSON 配置（`route.rules`，放在其他规则之前）：
 
-<img src="docs/images/topbar.png" alt="顶栏">
+```json
+{ "process_name": ["frpc"], "outbound": "direct" },
+{ "ip_cidr": ["127.0.0.0/8", "192.168.0.0/16"], "outbound": "direct" }
+```
 
-## 7. 看一眼玩家链接
+sing-box 配置中，如果直连出站的 tag 不是 `direct`，请换成你自己的 tag。
 
-面板会自己从 `frpc.ini` 读出玩家链接，显示在「玩家入口」里。**`https://` 开头就对了**，什么都不用填。
+如果软件不支持进程规则，就为隧道节点域名（`frpc.ini` 中的 `server_addr`）加一条直连规则，例如 `DOMAIN-SUFFIX,<server_addr>,DIRECT`；或者开服期间关闭 TUN，只用系统代理模式。
 
-<img src="docs/images/card-access.png" alt="玩家入口" width="460">
+面板还会从 `frpc` 的环境中移除 `http_proxy`、`https_proxy`、`all_proxy`。frp 会读取这些变量，所以在 `~/.zshrc` 中导出的代理不会影响隧道。
 
-想用别的地址（比如自己的域名），去「设置 → 公网地址」填。留空就是自动。
+验证方法：启动隧道，打开代理软件的连接列表，`frpc` 的连接应显示 DIRECT。
+
+### 5.2 让面板访问 GitHub
+
+面板先直连 GitHub。失败时，按以下顺序尝试本机代理端口，每个端口先试 HTTP 再试 SOCKS5：`7890`、`7897`、`10809`、`10808`、`6152`、`6153`、`1087`、`1080`。这些是常见代理软件的默认端口。你的端口可以在代理软件设置中找到，通常叫「混合端口」「HTTP 端口」或「SOCKS 端口」。
+
+如果端口不在其中，在 `config.json` 中设置 `ghProxy`，然后重启面板：
+
+```json
+{ "ghProxy": "http://127.0.0.1:你的端口" }
+```
+
+只有 SOCKS 端口时，写 `socks5h://127.0.0.1:你的端口`。面板下载期间代理软件必须保持开启。所有代理都失败时，面板会尝试 `ghMirrors` 中的镜像。
+
+### 5.3 让 git 和 VS Code 访问 GitHub
+
+TUN 模式下 `git` 和 VS Code 通常无需设置。如果无法连接，只让 GitHub 流量走代理端口：
+
+```bash
+git config --global http.https://github.com.proxy http://127.0.0.1:你的端口
+```
+
+VS Code：按 Cmd+Shift+P（Windows 和 Linux：Ctrl+Shift+P），选择「Preferences: Open User Settings (JSON)」，加入以下两行，然后重启 VS Code：
+
+```json
+"http.proxy": "http://127.0.0.1:你的端口",
+"http.proxySupport": "override"
+```
+
+以后要撤销 git 设置，运行 `git config --global --unset http.https://github.com.proxy`。
+
+## 6. 首次启动
+
+1. 双击 `Start-Stronghold-Panel.command`。首次运行可能被 macOS 拦截，此时右键文件并选择「打开」。
+2. 面板在 <http://localhost:3100> 打开。
+3. 面板用默认值生成 `config.json`，见 [config.json 参数](#configjson-参数)。
+
+- Windows：双击 `Start-Stronghold-Panel.bat`。SmartScreen 拦截时，选择「更多信息 → 仍要运行」。Windows 防火墙询问 Node.js 时，允许专用网络：局域网玩家需要，隧道玩家不需要。
+- Linux：在面板文件夹中，于终端运行 `./Start-Stronghold-Panel.sh`。Git 克隆中该文件名为 `Start-Stronghold-Panel.command`。
+
+开服期间请保持终端窗口打开；关闭窗口时，面板会同时停止游戏和隧道。
+
+<img src="docs/images/topbar.png" alt="面板顶栏">
+
+## 7. 检查玩家链接
+
+面板从 `frpc.ini` 读取玩家链接：使用 `server_addr` 和 `remote_port`，启用 `auto_https` 时使用 `https://`。链接显示在「玩家入口」卡片中，请确认它以 `https://` 开头。
+
+<img src="docs/images/card-access.png" alt="玩家入口卡片" width="460">
+
+面板还会根据 `server_addr` 找到你的节点，并从 `user =` 一行读取 SakuraFrp 访问密钥。因此通常无需在「设置」中填写任何内容。
+
+如需使用其他链接（例如自定义域名），填写「设置 → 公网地址」。如需显示其他节点的状态，填写「设置 → 监控节点」。字段留空即恢复为 `frpc.ini` 中的值。
 
 <details>
-<summary>设置长这样</summary>
+<summary>「设置」卡片</summary>
 
-<img src="docs/images/card-settings.png" alt="设置" width="420">
+<img src="docs/images/card-settings.png" alt="设置卡片" width="420">
 
 </details>
 
-## 8. 装游戏
+## 8. 安装游戏
 
-点「游戏服务器」里的「检查更新」，上面会出现「游戏有新版本」，点「下载并安装」。等进度条走完就好。
+点击游戏卡片中的「检查更新」，面板会显示「游戏有新版本」，点击「下载并安装」。面板从 [sganggs/Stronghold-Protocol](https://github.com/sganggs/Stronghold-Protocol) 下载发布包，安装到 `~/StrongholdProtocol/current`。
 
-<img src="docs/images/banner-update.png" alt="游戏有新版本">
+<img src="docs/images/banner-update.png" alt="游戏更新横幅">
 
-## 9. 测一下
+## 9. 开服前测试
 
-1. 点右上角「开始联机」，等游戏显示「运行中」、隧道显示「已连接」。
-2. 手机**关掉 Wi-Fi**，用流量打开玩家链接。
-3. 能看到「中转站」就成功了。点「进入游戏」开个房间试试。
+1. 点击「开始联机」，等待游戏显示「运行中」、隧道显示「已连接」。
+2. 手机关闭 Wi-Fi，使用移动数据。
+3. 打开玩家链接，应能加载「中转站」页面。
+4. 点击「进入游戏」并创建房间。
 
-第一次打开可能会提示证书不安全，点「高级 → 继续访问」就行。
+首次访问可能出现证书警告。Chrome 中选择「高级 → 继续前往」；Safari 中选择「显示详细信息 → 访问此网站」。
 
-**搞定。以后开服：双击启动文件 → 点「开始联机」→ 发链接。**
+## config.json 参数
+
+面板只在启动时读取一次 `config.json`，编辑文件后需重启面板。标为「面板」的参数也在「设置」中，在那里修改无需重启。
+
+`config.json` 可能包含访问密钥，因此已被 Git 忽略。仓库中的 `config.example.json` 展示了格式。
+
+| 参数 | 默认值 | 面板 | 含义 |
+|---|---|---|---|
+| `publicUrl` | 空 | 是 | 发给玩家的链接，用于复制按钮和二维码。留空表示由 `frpc.ini` 生成。 |
+| `nodeName` | 空 | 是 | 要显示状态的 SakuraFrp 节点。留空表示按 `frpc.ini` 中的 `server_addr` 查找。 |
+| `frpcBin` | `~/SakuraFrp/frpc`（Windows：`~/SakuraFrp/frpc.exe`） | 是 | `frpc` 程序路径 |
+| `frpcConfig` | `~/SakuraFrp/frpc.ini` | 是 | 第 4 步生成的隧道配置路径 |
+| `sakuraToken` | 空 | 是 | SakuraFrp 访问密钥。留空表示读取 `frpc.ini` 中的 `user =`。 |
+| `speedLimitMbps` | `10` | 是 | 隧道限速，用于带宽仪表 |
+| `dailyLimitGB` | `2` | 是 | 每日流量预算（GiB），以 UTC+8 零点为日界，仅提醒 |
+| `dailyAutoBroadcast` | `true` | 是 | 在 80%、95%、100% 时向玩家显示「流量提醒」 |
+| `port` | `3000` | 否 | 中转站对外端口，必须与隧道的本地端口一致 |
+| `gameInternalPort` | `3001` | 否 | 游戏在 127.0.0.1 上的端口，位于中转站之后 |
+| `panelPort` | `3100` | 否 | 主机面板在 127.0.0.1 上的端口 |
+| `gameRoot` | `~/StrongholdProtocol` | 否 | 存放 `current/`、`previous/`、`updates/` 的目录 |
+| `repo` | `sganggs/Stronghold-Protocol` | 否 | 游戏发布所在的 GitHub 仓库 |
+| `ghProxy` | `auto` | 否 | `auto` 依次尝试 `proxyPorts` 中的端口，`none` 关闭代理。也可以直接填 URL，例如 `http://127.0.0.1:7890` 或 `socks5h://127.0.0.1:1080`。 |
+| `proxyPorts` | `[7890, 7897, 10809, 10808, 6152, 6153, 1087, 1080]` | 否 | `auto` 模式尝试的本机代理端口（HTTP 和 SOCKS5），见第 5.2 步 |
+| `ghMirrors` | `["https://ghfast.top/", "https://gh-proxy.com/"]` | 否 | GitHub 失败时使用的下载镜像 |
+
+`config.json` 只需写与默认值不同的参数，标准安装下 `{}` 即可。在面板中保存设置时会补全其他参数。例如使用自定义域名：
+
+```json
+{
+  "publicUrl": "https://play.example.com:12345"
+}
+```
+
+## 面板生成的文件
+
+Windows 上 `~` 指用户文件夹，例如 `C:\Users\<用户名>`。
+
+| 路径 | 内容 |
+|---|---|
+| `config.json` | 你的设置 |
+| `usage.json` | 今日流量计数，重启不会清零 |
+| `~/StrongholdProtocol/current/` | 已安装的游戏 |
+| `~/StrongholdProtocol/previous/` | 上次更新前的版本，用于回滚 |
+| `~/StrongholdProtocol/updates/` | 下载中的文件 |
 
 ## 更新面板
 
-- 用 zip 的：下载新 zip 解压，把旧文件夹里的 `config.json` 和 `usage.json` 复制过去，用新文件夹启动。
-- 用 Git 的：VS Code 里点 Sync，或者 `git pull`，然后重新启动面板。
+1. 停止面板：关闭终端窗口或按 Ctrl+C。
+2. VS Code 中点击状态栏的 Sync；终端中在面板文件夹运行 `git pull`。
+3. 重新启动面板。
 
-`config.json` 一般不用碰。所有参数的说明在英文版的 [config.json 表](#configjson)。
+Git 更新不会改动 `config.json` 和 `usage.json`。
 
-## 出问题了
+使用发布 ZIP 的：从 [Releases](https://github.com/whyhea1/stronghold-host-panel/releases/latest) 下载新 ZIP 并解压，把旧文件夹中的 `config.json` 和 `usage.json` 复制到新文件夹，然后从新文件夹启动面板。
 
-| 情况 | 怎么办 |
+## 故障排查
+
+| 现象 | 处理 |
 |---|---|
-| 朋友打开显示 `501` | 发 `https://` 的链接。还不行就检查第 4 步的「自动 HTTPS」。 |
-| `https://` 报 SSL 错误 | `frpc.ini` 里没有 `auto_https`。重新跑第 4 步的 `-w` 命令，再在面板里断开、重新连接隧道。 |
-| 隧道连不上 / 很卡，开着代理 | 第 5 步的直连规则没加上。在代理软件的连接列表里看 frpc 是不是 DIRECT。 |
-| 提示「隧道已在线」 | 有旧的 frpc 还连着。点「断开」再点「连接」。还不行就把 Sakura 启动器关掉。 |
-| 红条：端口 3000 被占用 | 点「重启并接管」。 |
-| 检查更新失败 | 打开代理软件。端口不是常见的那几个，就在 `config.json` 里设 `ghProxy`（看英文版 5.2）。 |
-| 游戏启动不了 | `node -v` 要 22 以上。再看面板「日志」里的「游戏」那一栏。 |
-| Mac 不让打开 | 右键 → 打开。或者 `xattr -d com.apple.quarantine 文件名`。 |
-| Windows 拦了 / 杀毒删了 frpc.exe | 「更多信息 → 仍要运行」。杀毒软件里把 `SakuraFrp` 文件夹加白名单。 |
-| Linux 提示解压失败 | `sudo apt install unzip`，再点一次「下载并安装」。 |
+| 玩家看到 `501 Not Implemented` | 使用了 `http://`。发送 `https://` 链接；如果自动 HTTPS 未启用，重做第 4 步。 |
+| `https://` 报 `ERR_SSL_PROTOCOL_ERROR` | 当前运行的 `frpc` 未使用自动 HTTPS。运行 `grep auto_https ~/SakuraFrp/frpc.ini`（Windows：`Select-String auto_https ~\SakuraFrp\frpc.ini`）。无输出时，重新运行第 4 步的 `-w` 命令，然后在面板中重启隧道。 |
+| 开着代理软件时隧道失败或延迟高 | `frpc` 经过了代理。添加第 5.1 步的规则，并确认连接显示 DIRECT。 |
+| 隧道显示「隧道已在线」 | 旧的 `frpc` 仍在连接。点击「断开」再点击「连接」；仍无效时关闭 SakuraFrp 启动器后再点击「连接」。 |
+| 红色横幅：端口 3000 被占用 | 其他程序占用了端口 3000。点击「重启并接管」。 |
+| 面板提示游戏未安装 | 完成第 8 步 |
+| 检查 GitHub 失败 | 开启代理软件。端口不在 `proxyPorts` 中时设置 `ghProxy`，见第 5.2 步。 |
+| macOS 拦截 `frpc` 或启动文件 | 运行 `xattr -d com.apple.quarantine <文件>`，或右键文件选择「打开」 |
+| Windows 拦截 `frpc.exe` 或 `.bat` 文件 | SmartScreen：选择「更多信息 → 仍要运行」。杀毒软件删除 `frpc.exe` 时，把 `SakuraFrp` 文件夹加入排除项。 |
+| Linux：「could not extract the ZIP」 | 安装 `unzip`（`sudo apt install unzip`），再点击一次「下载并安装」 |
+| Linux：没有桌面通知 | 安装 `notify-send`（Debian/Ubuntu：`sudo apt install libnotify-bin`）。面板横幅不依赖它。 |
+| 游戏无法启动 | 运行 `node -v`，应输出 `v22.x` 或更高；然后查看面板「日志」卡片中的「游戏」标签。 |
 
 ---
 
@@ -237,6 +386,8 @@ If macOS asks to install the command line developer tools, accept. This installs
 
 ## 4. Create the tunnel
 
+> SakuraFrp docs (Chinese): [basics](https://doc.natfrp.com/basics.html) · [real-name verification](https://doc.natfrp.com/faq/realname.html) · [web app guide: pick a node, create a TCP tunnel](https://doc.natfrp.com/app/http.html) · [auto HTTPS](https://doc.natfrp.com/frpc/auto-https.html) · [frpc usage](https://doc.natfrp.com/frpc/usage.html)
+
 On the SakuraFrp website, create a tunnel with these values:
 
 | Field | Value |
@@ -265,7 +416,7 @@ Each time you change the tunnel on the website, run the `-w` command again. Then
 
 ## 5. If you use a proxy app
 
-Do this step if a proxy app runs on the computer while you host. Examples are Clash Verge Rev, Mihomo Party (Clash Party), ClashX, Surge, v2rayN, V2rayU, and sing-box. If you do not use a proxy, go to step 6.
+Do this step if a proxy app runs on the computer while you host. This includes any app with a system proxy, a TUN mode, or a virtual network adapter. If you do not use a proxy, go to step 6.
 
 A proxy app touches the panel in three places:
 
@@ -281,7 +432,7 @@ This is necessary in TUN mode, 增强模式, or any mode that catches all traffi
 
 Put these rules at the top of your rule list. Rules higher in the list win. On Windows, the process name is `frpc.exe`. Write `PROCESS-NAME,frpc.exe,DIRECT` (sing-box: `"frpc.exe"`) instead of `frpc`.
 
-Clash, Mihomo, and Clash Verge Rev (YAML, or the override / 覆写 / merge feature of your app):
+Apps with Clash-style YAML rules (put them in the override / 覆写 / merge feature of your app):
 
 ```yaml
 rules:
@@ -290,7 +441,7 @@ rules:
   - IP-CIDR,192.168.0.0/16,DIRECT,no-resolve
 ```
 
-Mihomo Party (Clash Party) script override:
+Apps with a JavaScript override script:
 
 ```js
 function main(config) {
@@ -304,7 +455,7 @@ function main(config) {
 }
 ```
 
-Surge (`[Rule]` section):
+Apps with Surge-style rules (`[Rule]` section):
 
 ```ini
 PROCESS-NAME,frpc,DIRECT
@@ -312,14 +463,14 @@ IP-CIDR,127.0.0.0/8,DIRECT,no-resolve
 IP-CIDR,192.168.0.0/16,DIRECT,no-resolve
 ```
 
-sing-box (`route.rules`, before other rules):
+Apps with a sing-box JSON config (`route.rules`, before other rules):
 
 ```json
 { "process_name": ["frpc"], "outbound": "direct" },
 { "ip_cidr": ["127.0.0.0/8", "192.168.0.0/16"], "outbound": "direct" }
 ```
 
-In sing-box, use the tag of your own direct outbound if it is not `direct`.
+In a sing-box config, use the tag of your own direct outbound if it is not `direct`.
 
 If your app has no process rules, add a direct rule for the node domain of your tunnel (the `server_addr` value in `frpc.ini`, for example `DOMAIN-SUFFIX,<server_addr>,DIRECT`). Or turn off TUN and use system-proxy mode while you host.
 
@@ -329,15 +480,7 @@ To make sure that the rule works, start the tunnel. Then open the connection lis
 
 ### 5.2 Let the panel reach GitHub
 
-The panel first tries GitHub directly. If that fails, it tries local proxy ports in this order, as HTTP and then as SOCKS5:
-
-| Port | Usual app |
-|---|---|
-| 7890 | Clash, Mihomo, Mihomo Party, ClashX |
-| 7897 | Clash Verge Rev |
-| 10809, 10808 | v2rayN (HTTP, SOCKS) |
-| 6152, 6153 | Surge (HTTP, SOCKS) |
-| 1087, 1080 | V2rayU (HTTP, SOCKS) |
+The panel first tries GitHub directly. If that fails, it tries these local proxy ports in this order, as HTTP and then as SOCKS5: `7890`, `7897`, `10809`, `10808`, `6152`, `6153`, `1087`, `1080`. These are the default ports of common proxy apps. The port of your app is in its settings, usually as "mixed port", "HTTP port", or "SOCKS port".
 
 If your app uses a different port, set `ghProxy` in `config.json`, then restart the panel:
 
@@ -375,6 +518,8 @@ To remove the git setting later, run `git config --global --unset http.https://g
 
 Keep the terminal window open while you host. If you close it, the panel stops the game and the tunnel.
 
+<img src="docs/images/topbar.png" alt="Top bar of the panel">
+
 ## 7. Check the player link
 
 The panel reads the player link from `frpc.ini`. It uses `server_addr` and `remote_port`, and `https://` when `auto_https` is on. The link shows in the 玩家入口 card. Make sure that it starts with `https://`.
@@ -384,6 +529,13 @@ The panel reads the player link from `frpc.ini`. It uses `server_addr` and `remo
 The panel also finds your node by `server_addr`, and reads the SakuraFrp 访问密钥 from the `user =` line. Thus you usually do not have to enter anything in 设置.
 
 To use a different link, for example a custom domain, enter it in 设置 → 公网地址. To show the status of a different node, enter its name in 设置 → 监控节点. Leave a field empty to go back to the value from `frpc.ini`.
+
+<details>
+<summary>The 设置 card</summary>
+
+<img src="docs/images/card-settings.png" alt="设置 card" width="420">
+
+</details>
 
 ## 8. Install the game
 
