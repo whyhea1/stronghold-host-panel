@@ -3,6 +3,10 @@
 # Usage: .github/build-release.sh v1.2.3   (run from the repo root; output goes to dist/)
 set -euo pipefail
 V="${1:?usage: build-release.sh <tag>}"
+# macOS bash 3.2 can read a non-ASCII byte as part of a variable name: "$VAR中" must be "${VAR}中"
+if grep -nP '\$[A-Za-z_][A-Za-z0-9_]*[^\x00-\x7F]' install.sh Start-Stronghold-Panel.command; then
+  echo "use \${VAR} before non-ASCII text in the lines above" >&2; exit 1
+fi
 rm -rf dist && mkdir -p dist
 for os in macos windows linux; do
   D="dist/$os/Stronghold-Host-Panel"

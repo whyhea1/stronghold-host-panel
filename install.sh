@@ -147,7 +147,8 @@ for cand in "$DIR/runtime/node/bin/node" "$(command -v node 2>/dev/null)" \
   if [ -n "$cand" ] && node_ok "$cand"; then NODE="$cand"; break; fi
 done
 if [ -n "$NODE" ]; then
-  ok "使用 $NODE（$("$NODE" -v)）" "using $NODE ($("$NODE" -v))"
+  # ${NODE} in braces: macOS bash 3.2 can read the bytes of a Chinese character as part of a variable name
+  ok "使用 ${NODE}（$("$NODE" -v)）" "using ${NODE} ($("$NODE" -v))"
 else
   info "没有找到 Node.js 22 或更高版本。下载一份私有副本到 $DIR/runtime/node（不需要管理员权限，不影响系统）。" \
        "No Node.js 22 or later found. Downloading a private copy to $DIR/runtime/node (no admin rights, the system stays unchanged)."
