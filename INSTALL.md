@@ -1,16 +1,16 @@
 # Install and setup
 
-This guide sets up the panel on a new Mac, from nothing to a working player link. Do it once. After that, hosting is: double-click the start file, then click 开始联机.
+This guide sets up the panel on a new computer, from nothing to a working player link. The commands are for macOS. Where Windows or Linux is different, a line below the macOS command shows the difference. Do it once. After that, hosting is: double-click the start file, then click 开始联机.
 
 ## What you need
 
 | Item | Where it goes | Notes |
 |---|---|---|
-| macOS | | Apple silicon or Intel |
-| Node.js 22 | Homebrew | The game needs Node 22 |
-| Git | Xcode command line tools | Only to clone the repo and get updates |
+| macOS, Windows 10/11, or Linux | | Apple silicon or Intel, x64 or ARM |
+| Node.js 22 or later | Homebrew / winget / nvm | The game needs Node 22 or later |
+| Git | Xcode tools / Git for Windows / package manager | Only to clone the repo and get updates |
 | SakuraFrp account | [natfrp.com](https://www.natfrp.com/) | The free plan is enough for a few players |
-| SakuraFrp `frpc` (CLI) | `~/SakuraFrp/frpc` | You do not need the SakuraFrp launcher app |
+| SakuraFrp `frpc` (CLI) | `~/SakuraFrp/frpc` (Windows: `frpc.exe`) | You do not need the SakuraFrp launcher app |
 | A proxy app (optional) | | Only if you need one to reach GitHub. Step 5 shows the rules. |
 
 ## 1. Install Node.js 22
@@ -22,17 +22,20 @@ source ~/.zshrc
 node -v
 ```
 
-The last command must print `v22.x`. On an Intel Mac, Homebrew uses `/usr/local/opt/node@22/bin`. The start file finds both paths.
+The last command must print `v22.x` or later. On an Intel Mac, Homebrew uses `/usr/local/opt/node@22/bin`. The start file finds both paths.
+
+- Windows (PowerShell): `winget install OpenJS.NodeJS.LTS` and `winget install Git.Git`. Then open a new window and run `node -v`.
+- Linux: install [nvm](https://github.com/nvm-sh/nvm#installing-and-updating), then run `nvm install 22`. Distro packages are often older than 22. Also install `git`, `curl`, and `unzip` (Debian/Ubuntu: `sudo apt install git curl unzip`).
 
 ## 2. Get the panel
 
 In VS Code:
 
-1. Push Cmd+Shift+P, type `Git: Clone`, then select "Clone from GitHub".
+1. Push Cmd+Shift+P (Windows and Linux: Ctrl+Shift+P), type `Git: Clone`, then select "Clone from GitHub".
 2. Select `whyhea1/stronghold-host-panel`.
 3. Select the Desktop as the location, then open the folder.
 
-In Terminal, the same thing:
+In a terminal, the same thing (the same commands work in PowerShell):
 
 ```bash
 cd ~/Desktop
@@ -43,7 +46,7 @@ If macOS asks to install the command line developer tools, accept. This installs
 
 ## 3. Install the SakuraFrp CLI
 
-1. Download the macOS `frpc` from the [SakuraFrp download page](https://www.natfrp.com/tunnel/download). Use `arm64` for Apple silicon and `amd64` for Intel. Stock frp cannot connect to SakuraFrp.
+1. Download `frpc` for your system from the [SakuraFrp download page](https://www.natfrp.com/tunnel/download): `darwin` for macOS, `windows` for Windows, `linux` for Linux. Use `arm64` for Apple silicon and ARM, and `amd64` for Intel and AMD. Stock frp cannot connect to SakuraFrp.
 2. Move it into place and remove the macOS quarantine flag:
 
    ```bash
@@ -53,6 +56,9 @@ If macOS asks to install the command line developer tools, accept. This installs
    xattr -d com.apple.quarantine ~/SakuraFrp/frpc 2>/dev/null
    ~/SakuraFrp/frpc -V
    ```
+
+   - Linux: the same commands, without the `xattr` line.
+   - Windows: make the folder `C:\Users\<you>\SakuraFrp`, put the file there, and rename it to `frpc.exe`. Then run `~\SakuraFrp\frpc.exe -V` in PowerShell.
 
 3. Make sure that the version text contains `sakura`. Use the newest build. Versions older than `0.51.0-sakura-7` handle 自动 HTTPS incorrectly.
 
@@ -78,13 +84,15 @@ cd ~/SakuraFrp
 grep auto_https frpc.ini
 ```
 
-The `grep` command must print an `auto_https` line. If it prints nothing, the website did not save the 自动 HTTPS setting. Save it again, then run the `-w` command again.
+Windows (PowerShell): `cd ~\SakuraFrp`, then `.\frpc.exe -f 你的访问密钥:隧道ID -w`, then `Select-String auto_https frpc.ini`.
+
+The `grep` (or `Select-String`) command must print an `auto_https` line. If it prints nothing, the website did not save the 自动 HTTPS setting. Save it again, then run the `-w` command again.
 
 Each time you change the tunnel on the website, run the `-w` command again. Then restart the tunnel in the panel.
 
 ## 5. If you use a proxy app
 
-Do this step if a proxy app runs on the Mac while you host. Examples are Clash Verge Rev, Mihomo Party (Clash Party), ClashX, Surge, v2rayN, V2rayU, and sing-box. If you do not use a proxy, go to step 6.
+Do this step if a proxy app runs on the computer while you host. Examples are Clash Verge Rev, Mihomo Party (Clash Party), ClashX, Surge, v2rayN, V2rayU, and sing-box. If you do not use a proxy, go to step 6.
 
 A proxy app touches the panel in three places:
 
@@ -98,7 +106,7 @@ A proxy app touches the panel in three places:
 
 This is necessary in TUN mode, 增强模式, or any mode that catches all traffic. In system-proxy mode only, `frpc` does not use the proxy. But add the rule anyway, so that a later mode change does not break the tunnel.
 
-Put these rules at the top of your rule list. Rules higher in the list win.
+Put these rules at the top of your rule list. Rules higher in the list win. On Windows, the process name is `frpc.exe`. Write `PROCESS-NAME,frpc.exe,DIRECT` (sing-box: `"frpc.exe"`) instead of `frpc`.
 
 Clash, Mihomo, and Clash Verge Rev (YAML, or the override / 覆写 / merge feature of your app):
 
@@ -174,7 +182,7 @@ In TUN mode, `git` and VS Code usually work without changes. If they cannot conn
 git config --global http.https://github.com.proxy http://127.0.0.1:你的端口
 ```
 
-For VS Code, push Cmd+Shift+P and select "Preferences: Open User Settings (JSON)". Add these lines, then restart VS Code:
+For VS Code, push Cmd+Shift+P (Windows and Linux: Ctrl+Shift+P) and select "Preferences: Open User Settings (JSON)". Add these lines, then restart VS Code:
 
 ```json
 "http.proxy": "http://127.0.0.1:你的端口",
@@ -189,7 +197,10 @@ To remove the git setting later, run `git config --global --unset http.https://g
 2. The panel opens at <http://localhost:3100>.
 3. The panel creates `config.json` with the default values. See [config.json](#configjson).
 
-Keep the Terminal window open while you host. If you close it, the panel stops the game and the tunnel.
+- Windows: double-click `Start-Stronghold-Panel.bat`. If SmartScreen blocks it, select More info, then Run anyway. If Windows Firewall asks about Node.js, allow private networks. LAN players need this. Tunnel players do not.
+- Linux: run `./Start-Stronghold-Panel.command` in a terminal, in the panel folder.
+
+Keep the terminal window open while you host. If you close it, the panel stops the game and the tunnel.
 
 ## 7. Check the player link
 
@@ -222,7 +233,7 @@ Git ignores `config.json` because it can contain your 访问密钥. `config.exam
 |---|---|---|---|
 | `publicUrl` | empty | yes | The link that players get, on the copy button and the QR code. Empty means "build it from `frpc.ini`". |
 | `nodeName` | empty | yes | SakuraFrp node to show status for. Empty means "find it by `server_addr` in `frpc.ini`". |
-| `frpcBin` | `~/SakuraFrp/frpc` | yes | Path to the `frpc` program |
+| `frpcBin` | `~/SakuraFrp/frpc` (Windows: `~/SakuraFrp/frpc.exe`) | yes | Path to the `frpc` program |
 | `frpcConfig` | `~/SakuraFrp/frpc.ini` | yes | Path to the tunnel config from step 4 |
 | `sakuraToken` | empty | yes | SakuraFrp 访问密钥. Empty means "read `user =` from `frpc.ini`". |
 | `speedLimitMbps` | `10` | yes | Tunnel speed limit, for the bandwidth gauge |
@@ -247,6 +258,8 @@ A `config.json` only needs the keys that are different from the defaults. With a
 
 ## Files the panel makes
 
+On Windows, `~` is your user folder, for example `C:\Users\<you>`.
+
 | Path | Content |
 |---|---|
 | `config.json` | Your settings |
@@ -257,8 +270,8 @@ A `config.json` only needs the keys that are different from the defaults. With a
 
 ## Update the panel
 
-1. Stop the panel. Close the Terminal window or push Ctrl+C.
-2. In VS Code, click Sync in the status bar. In Terminal, run `git pull` in the panel folder.
+1. Stop the panel. Close the terminal window or push Ctrl+C.
+2. In VS Code, click Sync in the status bar. In a terminal, run `git pull` in the panel folder.
 3. Start the panel again.
 
 Git does not touch `config.json` or `usage.json` during an update.
@@ -268,11 +281,14 @@ Git does not touch `config.json` or `usage.json` during an update.
 | Problem | Fix |
 |---|---|
 | Players get `501 Not Implemented` | They used `http://`. Send the `https://` link. If 自动 HTTPS is off, do step 4 again. |
-| `https://` gives `ERR_SSL_PROTOCOL_ERROR` | The running `frpc` does not use 自动 HTTPS. Run `grep auto_https ~/SakuraFrp/frpc.ini`. If it prints nothing, run the `-w` command from step 4 again. Then restart the tunnel in the panel. |
+| `https://` gives `ERR_SSL_PROTOCOL_ERROR` | The running `frpc` does not use 自动 HTTPS. Run `grep auto_https ~/SakuraFrp/frpc.ini` (Windows: `Select-String auto_https ~\SakuraFrp\frpc.ini`). If it prints nothing, run the `-w` command from step 4 again. Then restart the tunnel in the panel. |
 | The tunnel fails or lags, and a proxy app is on | `frpc` goes through the proxy. Add the rules from step 5.1, then make sure that the connection shows DIRECT. |
 | Tunnel shows 隧道已在线 | An old `frpc` is still connected. Click 断开, then 连接. If that does not help, close the SakuraFrp launcher app and click 连接 again. |
 | Red banner: port 3000 in use | Another program holds port 3000. Click 重启并接管. |
 | The panel says the game is not installed | Do step 8 |
 | GitHub check fails | Turn your proxy app on. If its port is not in `proxyPorts`, set `ghProxy`. See step 5.2. |
 | macOS blocks `frpc` or the start file | Run `xattr -d com.apple.quarantine <file>`, or right-click the file and select Open |
-| The game does not start | Run `node -v`. It must print `v22.x`. Then read the Game logs tab in the panel. |
+| Windows blocks `frpc.exe` or the `.bat` file | SmartScreen: select More info, then Run anyway. If antivirus removes `frpc.exe`, add an exclusion for the `SakuraFrp` folder. |
+| Linux: "could not extract the ZIP" | Install `unzip` (`sudo apt install unzip`), then click 下载并安装 again |
+| Linux: no desktop notifications | Install `notify-send` (Debian/Ubuntu: `sudo apt install libnotify-bin`). The panel banner works without it. |
+| The game does not start | Run `node -v`. It must print `v22.x` or later. Then read the Game logs tab in the panel. |

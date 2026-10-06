@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Stronghold Host Panel — entry point. No npm dependencies; Node 18+.
-// Run: node server.mjs   (or double-click Start-Stronghold-Panel.command)
+// Run: node server.mjs   (or double-click Start-Stronghold-Panel.command on macOS / .bat on Windows)
 //
 //   lib/core.mjs     config, shared state, log bus
 //   lib/util.mjs     process / network helpers
@@ -11,7 +11,7 @@
 //   lib/sakura.mjs   SakuraFrp account / node / 签到
 //   lib/api.mjs      host panel on 127.0.0.1:3100
 //   web/             panel UI (index.html, app.css, app.js) and hub pages (web/hub/)
-import { spawn } from "node:child_process";
+import { openTarget, OS_NAME } from "./lib/platform.mjs";
 import { config, procs, log } from "./lib/core.mjs";
 import { killTree } from "./lib/util.mjs";
 import { startHub, stopHub } from "./lib/hub.mjs";
@@ -24,9 +24,9 @@ startHub();
 startSakuraPolling();
 startPanel(() => {
   const url = `http://localhost:${config.panelPort}`;
-  log("panel", `panel ready — ${url}`);
+  log("panel", `panel ready on ${OS_NAME} — ${url}`);
   checkUpdate();
-  if (!process.env.NO_OPEN) spawn("open", [url], { stdio: "ignore" }).on("error", () => {});
+  if (!process.env.NO_OPEN) openTarget(url);
 });
 
 function shutdown() {
@@ -38,4 +38,4 @@ function shutdown() {
 }
 process.on("SIGINT", shutdown);
 process.on("SIGTERM", shutdown);
-process.on("SIGHUP", shutdown);   // Terminal window closed
+process.on("SIGHUP", shutdown);   // Terminal / console window closed (also fires on Windows)

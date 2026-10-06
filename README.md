@@ -1,23 +1,26 @@
 # Stronghold Host Panel
 
-A local web panel to host [Stronghold Protocol](https://github.com/sganggs/Stronghold-Protocol) on a Mac for remote players through a SakuraFrp tunnel. The panel replaces the terminal workflow. It starts the game and the `frpc` CLI, shows their logs, and puts a player hub in front of the game.
+A local web panel to host [Stronghold Protocol](https://github.com/sganggs/Stronghold-Protocol) on macOS, Windows, or Linux for remote players through a SakuraFrp tunnel. The panel replaces the terminal workflow. It starts the game and the `frpc` CLI, shows their logs, and puts a player hub in front of the game.
 
-No npm dependencies. Needs macOS and Node.js 22 (the game needs 22, the panel alone runs on 18 or later).
+No npm dependencies. Runs on macOS, Windows 10/11, and Linux. Needs Node.js 22 or later (the game needs 22, the panel alone runs on 18 or later).
 
 > ### [Install and setup guide →](INSTALL.md)
 >
-> New Mac or first install? Start here. The guide covers Node.js, the SakuraFrp tunnel, proxy apps (Clash, Mihomo, Surge, v2rayN, sing-box), `config.json`, and troubleshooting.
+> New computer or first install? Start here. The guide covers macOS, Windows, and Linux: Node.js, the SakuraFrp tunnel, proxy apps (Clash, Mihomo, Surge, v2rayN, sing-box), `config.json`, and troubleshooting.
 
 ## Start
 
-For a new Mac, do the [install and setup guide](INSTALL.md) first.
+For a new computer, do the [install and setup guide](INSTALL.md) first.
 
 When the setup is done:
 
-1. Double-click `Start-Stronghold-Panel.command`. The panel opens at <http://localhost:3100>.
+1. Start the panel. The panel opens at <http://localhost:3100>.
+   - macOS: double-click `Start-Stronghold-Panel.command`.
+   - Windows: double-click `Start-Stronghold-Panel.bat`.
+   - Linux: run `./Start-Stronghold-Panel.command` in a terminal.
 2. Click 开始联机. This starts the game and the tunnel.
 
-Keep the Terminal window open while you host. If you close it, the panel stops the game and the tunnel.
+Keep the terminal window open while you host. If you close it, the panel stops the game and the tunnel.
 
 ## Ports
 
@@ -44,7 +47,7 @@ When the game is down, `/play` shows an offline page. The page returns players t
 - Tunnel: `frpc` as a CLI process, with cleanup of leftover processes. The panel removes proxy variables from the environment of `frpc`, so the tunnel always connects directly.
 - Announcements: a banner on every game page, with preset messages.
 - Room members: the hub reads `room.state` frames from the game's WebSocket traffic. It sends nothing to the game and changes no game files.
-- Daily data budget: 2 GiB per day by default, with days that start at 00:00 UTC+8. At 80%, 95%, and 100% the panel shows a macOS notification and a panel banner. It can also show players a separate 流量提醒 bar. The panel never stops the game because of the budget.
+- Daily data budget: 2 GiB per day by default, with days that start at 00:00 UTC+8. At 80%, 95%, and 100% the panel shows a desktop notification and a panel banner. It can also show players a separate 流量提醒 bar. The panel never stops the game because of the budget.
 - SakuraFrp account: traffic, data plans, node status, and a daily 签到 reminder through API v4.
 - UI: light, dark, and auto themes. The layout changes from 3 columns to 2 to 1 for the window width. The panel loads the game's fonts from the game install when they are available.
 
@@ -66,6 +69,7 @@ You can change these keys in the panel settings: `publicUrl`, `frpcBin`, `frpcCo
 server.mjs            entry point
 lib/core.mjs          config, shared state, log bus
 lib/util.mjs          process and network helpers
+lib/platform.mjs      macOS / Windows / Linux differences (open, notify, keep awake, kill, unzip)
 lib/hub.mjs           port 3000: hub pages, game proxy, bandwidth count
 lib/roomwatch.mjs     room members from game traffic
 lib/usage.mjs         daily data budget
