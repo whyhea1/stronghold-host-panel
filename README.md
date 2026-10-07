@@ -208,7 +208,7 @@ SakuraFrp 自动 HTTPS 使用自签名证书，浏览器在这种页面上不保
 
 首次启动时，面板根据 `lib/core.mjs` 中的默认值生成 `config.json`。标准安装无需修改。以下参数可在面板「设置」中修改，保存后立即生效：`publicUrl`、`frpcBin`、`frpcConfig`、`sakuraToken`、`nodeName`、`speedLimitMbps`、`dailyLimitGB`、`dailyAutoBroadcast`、`gamePackage`、`playerCache`。`lang` 由右上角的语言按钮设置。其他参数（端口、游戏目录、代理等）需编辑文件后重启面板。
 
-完整参数表见 [安装指南：config.json 参数](INSTALL.md#configjson-参数)。`config.json` 可能包含访问密钥，已加入 `.gitignore`。
+完整参数表见 [安装指南：config.json 参数](INSTALL.md#configjson-参数)。
 
 ## 安全
 
@@ -232,7 +232,7 @@ SakuraFrp 自动 HTTPS 使用自签名证书，浏览器在这种页面上不保
 
 ## 发布版本
 
-在 GitHub 上用新标签（例如 `v1.2.0`）创建并发布 Release 后，`.github/workflows/release.yml` 会为 macOS、Windows、Linux 各构建一个 ZIP 并上传到该 Release。每个 ZIP 只包含面板、文档、示例配置和对应系统的启动文件。
+在 GitHub 上用新标签（例如 `v1.1.0`）创建并发布 Release 后，`.github/workflows/release.yml` 会为 macOS、Windows、Linux 各构建一个 ZIP 并上传到该 Release。每个 ZIP 只包含面板、文档、示例配置和对应系统的启动文件。
 
 ## 目录结构
 
@@ -454,7 +454,7 @@ When the game is down, `/play` shows an offline page with the host announcement.
 
 The panel creates `config.json` on first start with the defaults from `lib/core.mjs`. A standard setup needs no changes. You can change these keys in the panel settings, and they apply at once: `publicUrl`, `frpcBin`, `frpcConfig`, `sakuraToken`, `nodeName`, `speedLimitMbps`, `dailyLimitGB`, `dailyAutoBroadcast`, `gamePackage`, `playerCache`. The language button at the top right sets `lang`. Change the other keys (ports, game folder, proxy) in the file, then restart the panel.
 
-[INSTALL.md](INSTALL.md#configjson) explains each key. Git ignores `config.json` because it can contain the SakuraFrp access key. Git also ignores `usage.json`, which stores today's data count.
+[INSTALL.md](INSTALL.md#configjson) explains each key. 
 
 ## Security
 
@@ -478,7 +478,7 @@ For more, see [Troubleshooting](INSTALL.md#troubleshooting).
 
 ## Releases
 
-To make a release, create a release on GitHub with a new tag (for example `v1.2.0`), then publish it. The workflow in `.github/workflows/release.yml` then builds one ZIP each for macOS, Windows, and Linux, and adds the ZIPs to the release. Each ZIP contains only the panel, the docs, the example config, and the start file for that system.
+To make a release, create a release on GitHub with a new tag (for example `v1.1.0`), then publish it. The workflow in `.github/workflows/release.yml` then builds one ZIP each for macOS, Windows, and Linux, and adds the ZIPs to the release. Each ZIP contains only the panel, the docs, the example config, and the start file for that system.
 
 ## Layout
 
