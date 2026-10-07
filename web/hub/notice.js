@@ -2,9 +2,21 @@
 // 流量提醒 (daily data budget), each as its own bar. A closed bar stays closed until its text changes.
 (function () {
   var host = null, bars = {}, closed = {};
+  // language: the hub choice (sh-lang), else the game page's own language
+  function isEn() {
+    try {
+      var v = localStorage.getItem("sh-lang");
+      if (v) return v === "en";
+      for (var i = 0; i < localStorage.length; i++) {
+        var k = localStorage.key(i);
+        if (/(^|[.:_-])lang$/i.test(k) && /^"?en/i.test(localStorage.getItem(k) || "")) return true;
+      }
+    } catch (e) {}
+    return /^en/i.test(document.documentElement.lang || "");
+  }
   var KINDS = [
-    { key: "text", label: "房主公告", color: "#ffc600" },
-    { key: "auto", label: "流量提醒", color: "#f6a329" },
+    { key: "text", label: "房主公告", labelEn: "HOST", color: "#ffc600" },
+    { key: "auto", label: "流量提醒", labelEn: "DATA", color: "#f6a329" },
   ];
   function ensureHost() {
     if (host) return host;
@@ -21,16 +33,16 @@
       "background:rgba(12,15,14,.94);color:#eef1ef;border-bottom:2px solid " + kind.color + ";" +
       "font:600 14px/1.4 -apple-system,'PingFang SC','Noto Sans SC','Microsoft YaHei',sans-serif;" +
       "box-shadow:0 4px 18px rgba(0,0,0,.45);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)";
-    el.innerHTML = '<span style="flex:none;color:' + kind.color + ';font:400 10.5px/1 \'Novecento Wide\',\'Bender\',sans-serif;letter-spacing:.2em">' + kind.label + '</span>' +
+    el.innerHTML = '<span style="flex:none;color:' + kind.color + ';font:400 10.5px/1 \'Novecento Wide\',\'Bender\',sans-serif;letter-spacing:.2em">' + (isEn() ? kind.labelEn : kind.label) + '</span>' +
       '<span data-t style="flex:1;min-width:0"></span>' +
-      '<button aria-label="关闭" style="flex:none;background:none;border:0;color:#8e9893;font:inherit;font-size:18px;cursor:pointer;padding:0 4px">×</button>';
+      '<button aria-label="' + (isEn() ? "Close" : "关闭") + '" style="flex:none;background:none;border:0;color:#8e9893;font:inherit;font-size:18px;cursor:pointer;padding:0 4px">×</button>';
     el.querySelector("button").onclick = function () { closed[kind.key] = el.getAttribute("data-v"); el.style.display = "none"; };
     ensureHost().appendChild(el);
     return (bars[kind.key] = el);
   }
   function show(d) {
     KINDS.forEach(function (k) {
-      var text = (d && d[k.key]) || "";
+      var text = (d && ((k.key === "auto" && isEn() && d.autoEn) || d[k.key])) || "";
       var el = bars[k.key];
       if (!text) { if (el) el.style.display = "none"; return; }
       el = bar(k);

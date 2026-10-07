@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>中转站 · 卫戍协议</title>
+<script src="/__panel/i18n.js"></script>
 <link rel="stylesheet" href="/__panel/hub.css">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' fill='%230c0f0e'/%3E%3Cpath fill='%234ed8af' d='M5 3h3v2h2V3h4v2h2V3h3v5l-2 2v7l2 2v2H5v-2l2-2v-7L5 8z'/%3E%3C/svg%3E">
 </head>
@@ -16,6 +17,7 @@
         <div class="micro">Stronghold Protocol · Relay</div>
         <h1>中转站</h1>
       </div>
+      <button class="lang" id="lang" title="界面语言 / Language">EN</button>
       <span class="state" id="state">连接中</span>
     </div>
     <div class="body">
@@ -40,20 +42,88 @@
 
       <div class="actions">
         <a class="btn" href="/play" id="enter">进入游戏</a>
-        <a class="btn ghost" href="/backup">备份 / 恢复干员调配</a>
+        <a class="btn ghost" href="/backup" id="backup">备份 / 恢复干员调配</a>
       </div>
-      <div class="foot"><span class="micro" id="live" style="color:var(--mint)">连接中</span> · 不用刷新页面。房间信息由房主面板根据游戏日志实时整理；如有出入以游戏大厅为准。</div>
+
+      <div class="cache" id="cachecard" hidden>
+        <div class="cache-h">
+          <span class="micro">Data saver · 省流量</span>
+          <label class="sw"><input type="checkbox" id="con"> <span>保存游戏文件</span></label>
+        </div>
+        <div class="cache-v"><b class="num" id="cpct">—</b><span id="cstat">正在读取…</span></div>
+        <div class="qbar"><i id="cbar"></i></div>
+        <p class="cache-p">游戏文件（美术、音频、数据）保存在这个浏览器里。第一次进入后，再次连接只走联机数据，不再重新下载约 500 MB。</p>
+        <p class="cache-p">想第一次也不走隧道：先下载完整包 ZIP（直接从 GitHub 或镜像下载，不经过房主），再点「导入」。不需要解压。</p>
+        <div class="actions sm">
+          <label class="btn sm" id="cimp" for="czip">导入完整包 ZIP</label>
+          <input type="file" id="czip" accept=".zip,application/zip" hidden>
+          <a class="btn sm ghost" id="cdl" target="_blank" rel="noopener">下载完整包 · GitHub</a>
+          <a class="btn sm ghost" id="cmirror" target="_blank" rel="noopener">国内镜像</a>
+          <button class="btn sm ghost" id="cclear">清空缓存</button>
+        </div>
+        <div class="cprog" id="cprog" hidden>
+          <div class="quota-l"><span id="cprogt">读取 ZIP…</span><button class="btn sm ghost" id="cstop">取消</button></div>
+          <div class="qbar"><i id="cprogbar"></i></div>
+        </div>
+        <p class="cache-p dimmer">缓存按地址保存：房主换了隧道端口或域名后，需要重新下载或重新导入。浏览器空间不足时可能会清掉一部分。</p>
+      </div>
+      <div class="cache cache--off" id="cacheoff" hidden><span class="micro">Data saver · 省流量</span>
+        <p class="cache-p" id="cacheofftext">房主关闭了游戏文件缓存，每次进入都会重新下载。</p></div>
+
+      <div class="foot"><span class="micro" id="live" style="color:var(--mint)">连接中</span> · <span>不用刷新页面。房间信息由房主面板根据游戏日志实时整理；如有出入以游戏大厅为准。</span></div>
     </div>
   </div>
 </div>
+<script>window.__SH_CACHE = { game: false };</script>
+<script src="/__panel/cache.js"></script>
 <script>
+  const { T } = I18N, EN = I18N.lang === "en";
+  I18N.add({
+    "中转站 · 卫戍协议": "Relay · Stronghold Protocol", "中转站": "Relay", "界面语言 / Language": "Language / 界面语言",
+    "连接中": "Connecting", "Today · 今日联机流量": "Today's data", "Rooms · 房间与成员": "Rooms and members", "Data saver · 省流量": "Data saver",
+    "房主公告 · Notice": "Host notice", "流量提醒 · Data": "Data notice", "在线玩家": "Players", "房间": "Rooms", "对局中": "In match", "观战": "Watching",
+    "加载中…": "Loading…", "进入游戏": "Enter the game", "备份 / 恢复干员调配": "Back up / restore loadouts",
+    "保存游戏文件": "Keep game files", "正在读取…": "Reading…",
+    "游戏文件（美术、音频、数据）保存在这个浏览器里。第一次进入后，再次连接只走联机数据，不再重新下载约 500 MB。": "The game files (art, audio, data) stay in this browser. After your first visit, a reconnect only uses game data and does not download about 500 MB again.",
+    "想第一次也不走隧道：先下载完整包 ZIP（直接从 GitHub 或镜像下载，不经过房主），再点「导入」。不需要解压。": "To skip the tunnel on the first visit too: download the full package ZIP (from GitHub or a mirror, not through the host), then click Import. Do not unzip it.",
+    "导入完整包 ZIP": "Import full package ZIP", "下载完整包 · GitHub": "Download full package · GitHub", "国内镜像": "Mirror (China)", "清空缓存": "Clear cache",
+    "读取 ZIP…": "Reading ZIP…", "取消": "Cancel",
+    "缓存按地址保存：房主换了隧道端口或域名后，需要重新下载或重新导入。浏览器空间不足时可能会清掉一部分。": "The cache belongs to this address: after the host changes the tunnel port or domain, it fills again. The browser can remove part of it when disk space is low.",
+    "房主关闭了游戏文件缓存，每次进入都会重新下载。": "The host turned off the game file cache, so every visit downloads the files again.",
+    "这个浏览器不支持本地缓存（可能是无痕模式）。": "This browser cannot keep the files (private mode?).",
+    "不用刷新页面。房间信息由房主面板根据游戏日志实时整理；如有出入以游戏大厅为准。": "No need to reload. The host panel reads room data from the game log; the in-game lobby is the reference.",
+    "服务器在线": "Server online", "服务器离线": "Server offline", "无法连接": "Cannot connect",
+    "游戏暂时不在线，房主可能在重启或更新。恢复后本页会立刻更新。": "The game is offline for now. The host is probably restarting or updating it. This page updates as soon as it is back.",
+    "可加入": "Open", "加入": "Join", "房主": "Host", "离线": "Offline", "已准备": "Ready",
+    "成员下次房间变动时显示": "Members show at the next room change", "当前没有房间 — 进入游戏创建一个吧": "No rooms yet. Enter the game and create one.",
+    "已运行 {t}": "up {t}", "{h} 小时 {m} 分": "{h} h {m} min", "{m} 分钟": "{m} min",
+    "每 5 秒刷新": "Refreshes every 5 s", "实时更新": "Live", "重新连接中…": "Reconnecting…",
+    "已保存 {a} / {b} 个文件 · {c} / {d}": "{a} / {b} files kept · {c} / {d}", "缓存已关闭": "Cache off",
+    "已关闭：每次进入都会重新下载游戏文件": "Off: every visit downloads the game files again",
+    "缓存已清空": "Cache cleared", "清空这个浏览器保存的游戏文件？下次进入会重新下载。": "Clear the game files kept in this browser? The next visit downloads them again.",
+    "导入中：{a} / {b} 个文件 · {c} / {d}": "Importing: {a} / {b} files · {c} / {d}",
+    "导入完成：新增 {n} 个文件（{s}）{x}": "Import complete: {n} files added ({s}){x}", "，{n} 个已有": ", {n} already kept",
+    "，{n} 个与本服版本不同（已跳过）": ", {n} differ from this server's version (skipped)", "，{n} 个失败": ", {n} failed",
+    "已取消": "Cancelled", "这个文件不是游戏完整包，或者版本完全不同。": "This file is not the game's full package, or it is a very different version.",
+    "导入失败：{e}": "Import failed: {e}", "这个浏览器不支持导入（需要较新的 Chrome / Edge / Safari / Firefox）。": "This browser cannot import (use a recent Chrome, Edge, Safari or Firefox).",
+    "服务器版本 {v}": "server version {v}",
+  });
+  I18N.apply(document.body);
   const $ = (id) => document.getElementById(id);
   const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
-  const up = (s) => s == null ? "" : s >= 3600 ? `${Math.floor(s / 3600)} 小时 ${Math.floor(s % 3600 / 60)} 分` : `${Math.floor(s / 60)} 分钟`;
-  let base = null, baseAt = 0;   // uptime ticks locally between pushes
+  const up = (s) => s == null ? "" : s >= 3600 ? T("{h} 小时 {m} 分", { h: Math.floor(s / 3600), m: Math.floor(s % 3600 / 60) }) : T("{m} 分钟", { m: Math.floor(s / 60) });
+  const mb = (b) => b >= 1073741824 ? (b / 1073741824).toFixed(2) + " GB" : (b / 1048576).toFixed(0) + " MB";
+  const LQ = EN ? "lang=en" : "";
+  const playUrl = (q) => "/play" + (q || LQ ? "?" + [q, LQ].filter(Boolean).join("&") : "");
+  $("enter").href = playUrl("");
+  $("lang").textContent = EN ? "中文" : "EN";
+  $("lang").onclick = () => I18N.set(EN ? "zh" : "en");
+
+  let base = null, baseAt = 0, last = null;   // uptime ticks locally between pushes
   function render(d) {
+    last = d;
     $("card").classList.toggle("off", !d.online);
-    $("state").textContent = d.online ? "服务器在线" : "服务器离线";
+    $("state").textContent = T(d.online ? "服务器在线" : "服务器离线");
     $("state").className = "state" + (d.online ? "" : " bad");
     base = d.uptimeSec; baseAt = Date.now(); meta(d.version);
     $("players").textContent = d.players ?? "—";
@@ -62,8 +132,9 @@
     $("spect").textContent = d.spectators ?? "—";
     $("notice").classList.toggle("show", !!d.notice);
     $("noticetext").textContent = d.notice || "";
-    $("autonotice").classList.toggle("show", !!d.autoNotice);
-    $("autotext").textContent = d.autoNotice || "";
+    const auto = (EN && d.autoNoticeEn) || d.autoNotice || "";
+    $("autonotice").classList.toggle("show", !!auto);
+    $("autotext").textContent = auto;
     if (d.usage) {
       const g = (b) => (b / 1073741824).toFixed(2);
       $("quota").hidden = false;
@@ -72,42 +143,109 @@
       $("quota").className = "quota" + (d.usage.pct >= 95 ? " bad" : d.usage.pct >= 80 ? " warn" : "");
     }
     $("enter").style.display = d.online ? "" : "none";
-    if (!d.online) { $("list").innerHTML = '<div class="empty">游戏暂时不在线，房主可能在重启或更新。恢复后本页会立刻更新。</div>'; return; }
+    renderCacheLinks(d);
+    if (!d.online) { $("list").innerHTML = `<div class="empty">${esc(T("游戏暂时不在线，房主可能在重启或更新。恢复后本页会立刻更新。"))}</div>`; return; }
     $("list").innerHTML = d.rooms.length
       ? d.rooms.map((r) => {
-          const n = r.members ? r.members.filter((m) => !m.bot).length : null;
           const cap = r.capacity ? `${r.members ? r.members.length : "?"}/${r.capacity}` : "";
+          const code = encodeURIComponent(r.code);
           return `<div class="room">
             <div class="room-top"><span class="code">${esc(r.code)}</span>
-              ${r.inMatch ? '<span class="tag busy">对局中</span>' : '<span class="tag open">可加入</span>'}
+              ${r.inMatch ? `<span class="tag busy">${esc(T("对局中"))}</span>` : `<span class="tag open">${esc(T("可加入"))}</span>`}
               <span class="dim room-mode">${esc(r.mode)}${r.difficulty ? " · " + esc(r.difficulty) : ""}${cap ? " · " + cap : ""}</span>
-              ${r.inMatch ? "" : `<a class="btn sm ghost" href="/play?room=${encodeURIComponent(r.code)}">加入</a>`}</div>
-            <div class="mems">${r.members ? r.members.map(mem).join("") : `<span class="mem host">${esc(r.host)}<i>房主</i></span><span class="dim" style="font-size:12px">成员下次房间变动时显示</span>`}
-              ${(r.watchers || []).map((w) => `<span class="mem watch${w.online ? "" : " off"}">${esc(w.name)}<i>观战</i></span>`).join("")}</div>
+              <span class="room-btns">
+                <a class="btn sm ghost" href="${playUrl("watch=" + code)}">${EN ? "Watch" : "观战"}</a>
+                ${r.inMatch ? "" : `<a class="btn sm" href="${playUrl("room=" + code)}">${esc(T("加入"))}</a>`}
+              </span></div>
+            <div class="mems">${r.members ? r.members.map(mem).join("") : `<span class="mem host">${esc(r.host)}<i>${esc(T("房主"))}</i></span><span class="dim" style="font-size:12px">${esc(T("成员下次房间变动时显示"))}</span>`}
+              ${(r.watchers || []).map((w) => `<span class="mem watch${w.online ? "" : " off"}">${esc(w.name)}<i>${esc(T("观战"))}</i></span>`).join("")}</div>
           </div>`;
         }).join("")
-      : '<div class="empty">当前没有房间 — 进入游戏创建一个吧</div>';
+      : `<div class="empty">${esc(T("当前没有房间 — 进入游戏创建一个吧"))}</div>`;
   }
-  const mem = (m) => `<span class="mem${m.host ? " host" : ""}${m.bot ? " bot" : ""}${m.online ? "" : " off"}">${esc(m.name)}${m.host ? "<i>房主</i>" : ""}${m.bot ? "<i>AI</i>" : ""}${!m.online ? "<i>离线</i>" : m.ready && !m.host && !m.bot ? "<i>已准备</i>" : ""}</span>`;
+  const mem = (m) => `<span class="mem${m.host ? " host" : ""}${m.bot ? " bot" : ""}${m.online ? "" : " off"}">${esc(m.name)}${m.host ? `<i>${esc(T("房主"))}</i>` : ""}${m.bot ? "<i>AI</i>" : ""}${!m.online ? `<i>${esc(T("离线"))}</i>` : m.ready && !m.host && !m.bot ? `<i>${esc(T("已准备"))}</i>` : ""}</span>`;
   let ver = null;
   function meta(v) {
     if (v !== undefined) ver = v;
     const sec = base == null ? null : base + Math.floor((Date.now() - baseAt) / 1000);
-    $("meta").textContent = [ver && "v" + String(ver).replace(/^v/, ""), sec != null && "已运行 " + up(sec)].filter(Boolean).join(" · ") || "—";
+    $("meta").textContent = [ver && "v" + String(ver).replace(/^v/, ""), sec != null && T("已运行 {t}", { t: up(sec) })].filter(Boolean).join(" · ") || "—";
   }
   setInterval(() => meta(), 15000);
+
+  // ---- player cache (web/hub/cache.js) ----------------------------------------------------------------------
+  const C = window.SHCache;
+  let cacheShown = null, importing = null;
+  function renderCacheLinks(d) {
+    const on = !!d.cacheId;
+    if (cacheShown !== on) { cacheShown = on; refreshCache(); }
+    $("cachecard").hidden = !on; $("cacheoff").hidden = on;
+    const z = d.fullZip;
+    $("cdl").hidden = $("cmirror").hidden = !z;
+    if (z) {
+      const size = z.size ? ` · ${mb(z.size)}` : "";
+      $("cdl").href = z.url; $("cdl").textContent = T("下载完整包 · GitHub") + size;
+      $("cmirror").href = "https://ghfast.top/" + z.url;
+    }
+  }
+  async function refreshCache() {
+    if (!C || !C.supported) { $("cstat").textContent = T("这个浏览器不支持本地缓存（可能是无痕模式）。"); $("con").disabled = true; $("cimp").hidden = true; return; }
+    $("con").checked = C.enabled();
+    $("cimp").hidden = !C.canImport;
+    let i = null;
+    try { i = await C.info(); } catch {}
+    if (!i || !i.available) { $("cpct").textContent = "—"; $("cstat").textContent = C.enabled() ? "" : T("已关闭：每次进入都会重新下载游戏文件"); return; }
+    const pct = i.totalBytes ? Math.min(100, (i.bytes / i.totalBytes) * 100) : 0;
+    $("cpct").textContent = Math.floor(pct) + "%";
+    $("cbar").style.width = pct + "%";
+    $("cstat").textContent = !C.enabled() ? T("已关闭：每次进入都会重新下载游戏文件")
+      : T("已保存 {a} / {b} 个文件 · {c} / {d}", { a: i.files.toLocaleString(), b: i.totalFiles.toLocaleString(), c: mb(i.bytes), d: mb(i.totalBytes) });
+  }
+  $("con").onchange = () => { C.setEnabled($("con").checked); refreshCache(); };
+  $("cclear").onclick = async () => {
+    if (!confirm(T("清空这个浏览器保存的游戏文件？下次进入会重新下载。"))) return;
+    await C.clear(); refreshCache(); $("cstat").textContent = T("缓存已清空");
+  };
+  $("czip").onchange = async (e) => {
+    const file = e.target.files && e.target.files[0]; e.target.value = "";
+    if (!file || importing) return;
+    if (!C.canImport) { alert(T("这个浏览器不支持导入（需要较新的 Chrome / Edge / Safari / Firefox）。")); return; }
+    importing = new AbortController();
+    $("cprog").hidden = false; $("cprogt").textContent = T("读取 ZIP…"); $("cprogbar").style.width = "0";
+    let st = null;
+    try {
+      st = await C.importZip(file, (p) => {
+        if (p.phase === "import" && p.total) {
+          $("cprogt").textContent = T("导入中：{a} / {b} 个文件 · {c} / {d}", { a: p.done.toLocaleString(), b: p.total.toLocaleString(), c: mb(p.bytes), d: mb(p.totalBytes) });
+          $("cprogbar").style.width = ((p.bytes / (p.totalBytes || 1)) * 100).toFixed(1) + "%";
+        }
+      }, importing.signal);
+      if (st.phase === "aborted") $("cprogt").textContent = T("已取消");
+      else if (!st.matched) $("cprogt").textContent = T("这个文件不是游戏完整包，或者版本完全不同。");
+      else {
+        const x = (st.already ? T("，{n} 个已有", { n: st.already }) : "") + (st.other ? T("，{n} 个与本服版本不同（已跳过）", { n: st.other }) : "") + (st.failed ? T("，{n} 个失败", { n: st.failed }) : "");
+        $("cprogt").textContent = T("导入完成：新增 {n} 个文件（{s}）{x}", { n: (st.done - st.failed).toLocaleString(), s: mb(st.bytes), x });
+        $("cprogbar").style.width = "100%";
+      }
+    } catch (err) {
+      $("cprogt").textContent = T("导入失败：{e}", { e: err && err.message || err });
+    }
+    importing = null; $("cstop").hidden = true;
+    refreshCache();
+  };
+  $("cstop").onclick = () => { if (importing) importing.abort(); };
+  $("czip").addEventListener("click", () => { $("cstop").hidden = false; });
 
   // live push (SSE); falls back to polling if the stream can't be held open
   let poll = null;
   async function pollOnce() {
-    try { render(await (await fetch("/status.json", { cache: "no-store" })).json()); $("live").textContent = "每 5 秒刷新"; }
-    catch { $("state").textContent = "无法连接"; $("state").className = "state bad"; }
+    try { render(await (await fetch("/status.json", { cache: "no-store" })).json()); $("live").textContent = T("每 5 秒刷新"); }
+    catch { $("state").textContent = T("无法连接"); $("state").className = "state bad"; }
   }
   function startPoll() { if (!poll) { pollOnce(); poll = setInterval(pollOnce, 5000); } }
   if (window.EventSource) {
     const es = new EventSource("/__panel/events");
-    es.onmessage = (ev) => { if (poll) { clearInterval(poll); poll = null; } $("live").textContent = "实时更新"; render(JSON.parse(ev.data)); };
-    es.onerror = () => { $("live").textContent = "重新连接中…"; setTimeout(() => { if (es.readyState !== 1) startPoll(); }, 4000); };
+    es.onmessage = (ev) => { if (poll) { clearInterval(poll); poll = null; } $("live").textContent = T("实时更新"); render(JSON.parse(ev.data)); };
+    es.onerror = () => { $("live").textContent = T("重新连接中…"); setTimeout(() => { if (es.readyState !== 1) startPoll(); }, 4000); };
   } else startPoll();
 </script>
 </body>

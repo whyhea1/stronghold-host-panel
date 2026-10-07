@@ -79,7 +79,8 @@ p.en { color: var(--lo); font-size: 13.5px; }
 .room-top { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .room-top .code { font: 600 16px "Bender", ui-monospace, monospace; color: var(--mint); letter-spacing: .08em; }
 .room-mode { font-size: 13px; flex: 1; min-width: 0; }
-.room-top .btn { margin-left: auto; flex: none; }
+.room-btns { margin-left: auto; display: flex; gap: 6px; flex: none; }
+.room-top > .btn { margin-left: auto; flex: none; }
 .mems { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; align-items: center; }
 .mem { display: inline-flex; align-items: center; gap: 6px; padding: 2px 8px; font-size: 13px; background: var(--bg-3); border: 1px solid var(--line-2); color: var(--hi); }
 .mem i { font-style: normal; font-size: 10.5px; letter-spacing: .08em; color: var(--lo); }
@@ -97,3 +98,23 @@ p.en { color: var(--lo); font-size: 13.5px; }
 .qbar i { position: absolute; inset: 0 auto 0 0; width: 0; background: var(--mint); transition: width .6s ease, background .3s; }
 .quota.warn .qbar i { background: var(--amber); } .quota.warn .num { color: var(--amber); }
 .quota.bad .qbar i { background: var(--red); } .quota.bad .num { color: var(--red); }
+
+/* language toggle */
+.lang { flex: none; height: 28px; padding: 0 10px; background: transparent; border: 1px solid var(--line-2); color: var(--lo); font: 600 12px/1 system-ui, sans-serif; cursor: pointer; }
+.lang:hover { color: var(--hi); border-color: var(--mint); }
+
+/* data saver (player cache) */
+.cache { margin-top: 22px; padding: 14px 16px; border: 1px solid var(--line); border-left: 3px solid var(--mint); background: var(--bg-3); }
+.cache--off { border-left-color: var(--line-2); }
+.cache-h { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+.sw { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--md); cursor: pointer; }
+.sw input { width: 16px; height: 16px; margin: 0; accent-color: var(--mint); }
+.cache-v { display: flex; align-items: baseline; gap: 10px; margin: 10px 0 8px; font-size: 13px; color: var(--md); flex-wrap: wrap; }
+.cache-v b { font: 300 26px/1 "Bender", ui-monospace, monospace; color: var(--mint); }
+.cache-p { margin: 10px 0 0; font-size: 13px; line-height: 1.6; color: var(--md); }
+.cache-p.dimmer { color: var(--dim); font-size: 12px; }
+.actions.sm { margin-top: 12px; gap: 8px; }
+.actions.sm .btn { cursor: pointer; }
+.cprog { margin-top: 12px; font-size: 13px; color: var(--md); }
+.cprog .quota-l { align-items: center; }
+[hidden] { display: none !important; }

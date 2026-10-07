@@ -14,6 +14,7 @@
     document.documentElement.dataset.pref = pref;
   })();
 </script>
+<script src="/i18n.js"></script>
 <link rel="stylesheet" href="/app.css">
 </head>
 <body>
@@ -33,12 +34,14 @@
     <div class="sitem"><span class="micro">Hub</span><span class="state val" id="hhub">—</span></div>
     <div class="sitem"><span class="micro">Players</span><span class="num val" id="hplayers">—</span></div>
     <div class="sitem"><span class="micro">Tunnel ↓↑</span><span class="num val" id="hbw">—</span></div>
+    <div class="sitem"><span class="micro">CPU · RAM</span><span class="num val" id="hsys">—</span></div>
     <div class="sitem sitem--quota" id="hq"><span class="micro">Today · 流量</span><span class="num val" id="hquota">—</span><span class="sbar"><i id="hqbar"></i></span></div>
     <div class="sitem"><span class="micro">Version</span><span class="num val" id="ver">—</span></div>
   </div>
   <div class="top-actions">
     <button class="btn btn--primary" id="btnsession">开始联机</button>
     <button class="btn btn--danger" id="btnstopall">全部停止</button>
+    <button class="btn btn--ghost btn--icon" id="btnlang" title="界面语言 / Language">EN</button>
     <button class="btn btn--ghost btn--icon" id="btntheme" title="主题：自动 / 浅色 / 深色">自动</button>
   </div>
 </header>
@@ -66,11 +69,20 @@
   </div>
 
   <div class="alert alert--mint hidden" id="updatecard">
-    <div class="a-body"><b>游戏有新版本 <span class="num" id="updtag"></span></b>
+    <div class="a-body"><b id="updtitle">游戏有新版本</b> <span class="num" id="updtag"></span>
       <span class="dim num" id="updsize"></span>
-      <div class="hint" id="updroute">下载期间游戏继续运行；安装时玩家会看到离线页和你的公告，装好后自动重启。旧版本保留在 previous/。</div>
-      <div class="bar hidden" id="updbar"><i id="updprog"></i></div></div>
-    <button class="btn btn--sm btn--primary" id="btnupd" data-act="applyUpdate">下载并安装</button>
+      <div class="hint" id="updhint">下载和解压期间游戏继续运行；安装时玩家会看到离线页和你的公告，装好后自动重启。旧版本保留在 previous/。</div>
+      <ol class="steps hidden" id="updsteps"></ol></div>
+    <button class="btn btn--sm hidden" id="btnupdstop" data-act="stopAssets">停止下载素材</button>
+    <button class="btn btn--sm btn--ghost hidden" id="btnupdok">知道了</button>
+    <button class="btn btn--sm btn--primary" id="btnupd">下载并安装</button>
+  </div>
+
+  <div class="alert hidden" id="assetbanner">
+    <div class="a-body"><b id="assettitle">游戏素材未下载</b>
+      <div class="hint" id="assethint"></div></div>
+    <button class="btn btn--sm" data-act="switchPackage" id="btnswitch">换成完整包</button>
+    <button class="btn btn--sm btn--primary" data-act="fetchAssets" id="btnassets">下载素材</button>
   </div>
 
   <div class="grid">
@@ -85,6 +97,7 @@
         <div class="pb">
           <dl class="kv">
             <dt>版本</dt><dd class="num" id="gver">—</dd>
+            <dt>安装包</dt><dd id="gpkg">—</dd>
             <dt>运行时长</dt><dd class="num" id="gup">—</dd>
             <dt>监听</dt><dd class="num" id="gport">—</dd>
           </dl>
@@ -141,7 +154,11 @@
             <label>SakuraFrp 访问密钥<input class="input" id="cfgtok" type="password" autocomplete="off"></label>
             <label>带宽上限 (Mbps)<input class="input" id="cfgspeed" inputmode="numeric"></label>
             <label>每日流量上限 (GiB)<input class="input" id="cfgdaily" inputmode="decimal"></label>
+            <label>游戏安装包<select class="input" id="cfgpkg">
+              <option value="full">完整包（推荐，约 430 MB）</option>
+              <option value="lite">精简包（约 22 MB，素材另下约 460 MB）</option></select></label>
             <label class="check"><input type="checkbox" id="cfgautob"> 到 80% / 95% / 100% 时自动提醒玩家</label>
+            <label class="check"><input type="checkbox" id="cfgcache"> 玩家浏览器保存游戏文件，重连不再走隧道下载</label>
           </div>
           <div class="btns"><button class="btn btn--primary" id="btnsave">保存设置</button></div>
           <div class="hint">访问密钥留空则保留已保存的值，或自动从 frpc.ini 的 <code>user =</code> 读取。</div>
@@ -164,7 +181,8 @@
             <div class="field"><span class="val" id="hublink">—</span><button class="btn btn--ghost" data-copy="playUrl">复制</button></div>
           </div>
           <div class="qr-row"><div id="qr" class="hidden" title="手机用流量扫码测试"></div><div class="hint">手机关掉 Wi-Fi、用流量扫码，可以在开局前先测一遍外网能不能进。</div></div>
-        </div></div>
+        </div>
+        <div class="hint" id="cacheinfo"></div></div>
       </section>
 
       <section class="panel">
@@ -218,7 +236,24 @@
       <div class="sub">
         <section class="panel">
           <header class="ph">
-            <div><div class="micro">09 · Peers</div><h2>当前连接</h2></div>
+            <div><div class="micro">09 · System</div><h2>主机负载</h2></div>
+            <span class="ph-r num" id="sysmeta"></span>
+          </header>
+          <div class="pb">
+            <div class="meters">
+              <div class="meter"><div class="m-h"><span class="micro">CPU</span><b class="num" id="scpu">—</b></div>
+                <div class="gauge"><i id="scpubar"></i></div><svg class="spark spark--sm" id="scpuspark" viewBox="0 0 90 40" preserveAspectRatio="none" aria-label="最近 3 分钟 CPU"></svg></div>
+              <div class="meter"><div class="m-h"><span class="micro">Memory · 内存</span><b class="num" id="smem">—</b></div>
+                <div class="gauge"><i id="smembar"></i></div><svg class="spark spark--sm" id="smemspark" viewBox="0 0 90 40" preserveAspectRatio="none" aria-label="最近 3 分钟内存"></svg></div>
+            </div>
+            <div class="tbl-wrap" id="sysprocs"></div>
+            <div class="hint" id="syshint">CPU 按整台电脑计算（100% = 所有核心）；内存为常驻内存，不含文件缓存。</div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <header class="ph">
+            <div><div class="micro">10 · Peers</div><h2>当前连接</h2></div>
             <span class="ph-r num" id="conncount"></span>
           </header>
           <div class="pb">
@@ -229,7 +264,7 @@
 
         <section class="panel">
           <header class="ph">
-            <div><div class="micro">10 · Bandwidth</div><h2>隧道流量</h2></div>
+            <div><div class="micro">11 · Bandwidth</div><h2>隧道流量</h2></div>
             <span class="ph-r">上限 <span class="num" id="bwlim">10</span> Mbps</span>
           </header>
           <div class="pb">
@@ -258,7 +293,7 @@
 
   <section class="panel">
     <header class="ph">
-      <div><div class="micro">11 · Logs</div><h2>日志</h2></div>
+      <div><div class="micro">12 · Logs</div><h2>日志</h2></div>
       <span class="ph-r micro">UTC+8</span>
     </header>
     <div class="pb">

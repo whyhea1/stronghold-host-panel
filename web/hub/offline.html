@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>服务器离线 · 卫戍协议</title>
+<script src="/__panel/i18n.js"></script>
 <link rel="stylesheet" href="/__panel/hub.css">
 <style>body { display: flex; align-items: center; justify-content: center; } .wrap { max-width: 520px; width: 100%; }</style>
 </head>
@@ -22,20 +23,28 @@
       <div class="notice" id="notice"><div class="micro" style="color:var(--gold)">房主公告 · Notice</div><div id="noticetext" style="margin-top:4px"></div></div>
       <p>房主的服务器暂未开放，或正在重启 / 更新。</p>
       <p>不用刷新，服务器恢复后本页会自动带你进入游戏。</p>
-      <p class="en">The host's game server is offline or restarting. This page forwards you automatically when it's back.</p>
       <div class="actions"><a class="btn ghost" href="/">查看中转站</a></div>
       <div class="foot">长时间无法进入时，请联系房主检查隧道或游戏服务。</div>
     </div>
   </div>
 </div>
 <script>
+  I18N.add({
+    "服务器离线 · 卫戍协议": "Server offline · Stronghold Protocol", "游戏暂时不在线": "The game is offline for now", "离线": "Offline",
+    "房主的服务器暂未开放，或正在重启 / 更新。": "The host's game server is not open yet, or it is restarting or updating.",
+    "不用刷新，服务器恢复后本页会自动带你进入游戏。": "No need to reload: this page takes you into the game when the server is back.",
+    "查看中转站": "Open the relay page", "长时间无法进入时，请联系房主检查隧道或游戏服务。": "If this takes long, ask the host to check the tunnel and the game server.",
+    "已恢复，正在进入…": "Back online, entering…", "房主公告 · Notice": "Host notice",
+  });
+  I18N.apply(document.body);
+  const EN = I18N.lang === "en";
   // live push when available; polling otherwise
   function apply(d) {
-    document.getElementById("noticetext").textContent = [d.notice, d.autoNotice].filter(Boolean).join("　·　");
+    document.getElementById("noticetext").textContent = [d.notice, (EN && d.autoNoticeEn) || d.autoNotice].filter(Boolean).join("　·　");
     document.getElementById("notice").classList.toggle("show", !!(d.notice || d.autoNotice));
     if (d.online) {
       const s = document.getElementById("state");
-      s.textContent = "已恢复，正在进入…"; s.className = "state";
+      s.textContent = I18N.T("已恢复，正在进入…"); s.className = "state";
       document.getElementById("card").classList.remove("off");
       setTimeout(() => location.reload(), 700);
       return true;

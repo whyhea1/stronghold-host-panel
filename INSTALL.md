@@ -25,7 +25,7 @@ macOS · Windows · Linux
 | `frpc` | 从 SakuraFrp API 获取当前系统和 CPU 的最新版本，校验 MD5，放到 `~/SakuraFrp/` |
 | 隧道 | 用访问密钥列出本地端口为 `3000` 的 TCP 隧道供选择；没有时列出可用节点（国内节点在前）并新建一条。隧道未启用自动 HTTPS 或本地 IP 不是 `127.0.0.1` 时，脚本可以直接修改 |
 | `frpc.ini` | 运行 `frpc -f <访问密钥>:<隧道 ID> -w` 写入 `~/SakuraFrp/frpc.ini`，旧文件备份为 `frpc.ini.bak` |
-| 游戏 | 用面板的更新程序下载最新版本到 `~/StrongholdProtocol/current` |
+| 游戏 | 用面板的更新程序下载最新版本到 `~/StrongholdProtocol/current`，按步骤显示进度。默认装完整包，见[第 8 步](#8-安装游戏) |
 
 运行前需要：SakuraFrp 账号并完成实名认证，以及访问密钥（[用户信息](https://www.natfrp.com/user/)）。见[第 4 步](#4-创建隧道)中的 SakuraFrp 文档链接。
 
@@ -274,9 +274,18 @@ sing-box 配置中，如果直连出站的 tag 不是 `direct`，请换成你自
 
 ### 8. 安装游戏
 
-点击游戏卡片中的「检查更新」，面板会显示「游戏有新版本」，点击「下载并安装」。面板从 [sganggs/Stronghold-Protocol](https://github.com/sganggs/Stronghold-Protocol) 下载发布包，安装到 `~/StrongholdProtocol/current`。
+点击游戏卡片中的「检查更新」，面板会显示「游戏有新版本」，点击「下载并安装」。面板从 [sganggs/Stronghold-Protocol](https://github.com/sganggs/Stronghold-Protocol) 下载发布包，安装到 `~/StrongholdProtocol/current`。安装卡片逐步显示下载、解压、替换文件和启动的进度。
 
-<img src="docs/images/banner-update.png" alt="游戏更新横幅">
+<img src="docs/images/banner-update.png" alt="游戏安装进度">
+
+游戏从 v0.2.0 起有两种安装包，在「设置 → 游戏安装包」中选择：
+
+| 安装包 | 大小 | 说明 |
+|---|---|---|
+| 完整包（默认，推荐） | 约 430 MB | 全部美术和音频，包括 3D 棋盘和召唤物模型 |
+| 精简包 | 约 22 MB | 装好后面板运行游戏自带的 `tools/setup.mjs` 下载素材（约 460 MB，可续传，不走 GitHub）。素材下载失败时，横幅上有「下载素材」和「换成完整包」 |
+
+完整包也是玩家缓存的来源：玩家可以在中转站导入同一个 ZIP，见 [README](README.md#功能)。
 
 ### 9. 开服前测试
 
@@ -303,6 +312,9 @@ sing-box 配置中，如果直连出站的 tag 不是 `direct`，请换成你自
 | `speedLimitMbps` | `10` | 是 | 隧道限速，用于带宽仪表 |
 | `dailyLimitGB` | `2` | 是 | 每日流量预算（GiB），以 UTC+8 零点为日界，仅提醒 |
 | `dailyAutoBroadcast` | `true` | 是 | 在 80%、95%、100% 时向玩家显示「流量提醒」 |
+| `gamePackage` | `full` | 是 | 游戏安装包：`full`（完整包）或 `lite`（精简包，素材另下），见第 8 步 |
+| `playerCache` | `true` | 是 | 玩家浏览器保存游戏文件（IndexedDB），重连不再通过隧道重新下载；中转站可导入完整包 ZIP |
+| `lang` | `zh` | 是 | `zh` 或 `en`：面板默认语言和桌面通知语言，由右上角语言按钮设置 |
 | `port` | `3000` | 否 | 中转站对外端口，必须与隧道的本地端口一致 |
 | `gameInternalPort` | `3001` | 否 | 游戏在 127.0.0.1 上的端口，位于中转站之后 |
 | `panelPort` | `3100` | 否 | 主机面板在 127.0.0.1 上的端口 |
@@ -328,6 +340,7 @@ Windows 上 `~` 指用户文件夹，例如 `C:\Users\<用户名>`。
 |---|---|
 | `config.json` | 你的设置 |
 | `usage.json` | 今日流量计数，重启不会清零 |
+| `.cache/crc.json` | 玩家缓存文件清单的校验值缓存，可以删除，下次启动重建 |
 | `~/StrongholdProtocol/current/` | 已安装的游戏 |
 | `~/StrongholdProtocol/previous/` | 上次更新前的版本，用于回滚 |
 | `~/StrongholdProtocol/updates/` | 下载中的文件 |
@@ -358,6 +371,9 @@ Windows 上 `~` 指用户文件夹，例如 `C:\Users\<用户名>`。
 | Windows 拦截 `frpc.exe` 或 `.bat` 文件 | SmartScreen：选择「更多信息 → 仍要运行」。杀毒软件删除 `frpc.exe` 时，把 `SakuraFrp` 文件夹加入排除项。 |
 | Linux：「could not extract the ZIP」 | 安装 `unzip`（`sudo apt install unzip`），再点击一次「下载并安装」 |
 | Linux：没有桌面通知 | 安装 `notify-send`（Debian/Ubuntu：`sudo apt install libnotify-bin`）。面板横幅不依赖它。 |
+| 游戏画面是占位图、缺少棋盘或模型 | 装的是精简包且素材未下载完。点击横幅上的「下载素材」，或在「设置」中换成完整包。 |
+| 玩家每次进入游戏都重新下载 | 在「设置」中开启玩家缓存。无痕模式不保存缓存；更换隧道地址（节点或端口）后缓存按新地址重新建立。 |
+| 中转站导入 ZIP 时提示「不是游戏完整包」或很多文件「与本服版本不同」 | 下载与房主游戏版本相同的完整包（中转站卡片中有链接），不要用精简包。 |
 | 游戏无法启动 | 运行 `node -v`，应输出 `v22.x` 或更高；然后查看面板「日志」卡片中的「游戏」标签。 |
 
 ## 使用 Git 克隆（可选）
@@ -429,7 +445,7 @@ The installer does steps 1–8 of [Manual install](#manual-install):
 | `frpc` | Gets the newest build for your system and CPU from the SakuraFrp API, checks the MD5, and puts it in `~/SakuraFrp/` |
 | Tunnel | Uses your access key to list the TCP tunnels to local port `3000`. If there is none, it lists the nodes you can use (mainland nodes first) and creates a tunnel. If the tunnel does not use 自动 HTTPS, or its local IP is not `127.0.0.1`, the installer can change it |
 | `frpc.ini` | Runs `frpc -f <access key>:<tunnel ID> -w` to write `~/SakuraFrp/frpc.ini`, and keeps the old file as `frpc.ini.bak` |
-| Game | Uses the panel updater to download the newest version into `~/StrongholdProtocol/current` |
+| Game | Uses the panel updater to download the newest version into `~/StrongholdProtocol/current`, with progress for each step. The default is the full package. See [step 8](#8-install-the-game). |
 
 Before you start, you need a SakuraFrp account with the real-name verification done, and your access key ([用户信息](https://www.natfrp.com/user/)). [Step 4](#4-create-the-tunnel) has the links to the SakuraFrp docs.
 
@@ -678,9 +694,18 @@ To use a different link, for example a custom domain, enter it in 设置 → 公
 
 ### 8. Install the game
 
-Click 检查更新 in the game card. The panel shows 游戏有新版本. Click 下载并安装. The panel downloads the release ZIP from [sganggs/Stronghold-Protocol](https://github.com/sganggs/Stronghold-Protocol) and installs it to `~/StrongholdProtocol/current`.
+Click 检查更新 in the game card. The panel shows 游戏有新版本. Click 下载并安装. The panel downloads the release ZIP from [sganggs/Stronghold-Protocol](https://github.com/sganggs/Stronghold-Protocol) and installs it to `~/StrongholdProtocol/current`. The install card shows the progress of each step: download, extract, install files, and start.
 
-<img src="docs/images/banner-update.png" alt="Update banner">
+<img src="docs/images/banner-update.png" alt="Install progress">
+
+From v0.2.0, the game has two packages. Select one in 设置 → 游戏安装包:
+
+| Package | Size | Notes |
+|---|---|---|
+| Full (default, recommended) | about 430 MB | All art and audio, also the 3D board and the summon models |
+| Lite | about 22 MB | After the install, the panel runs the game's own `tools/setup.mjs` to download the art (about 460 MB, resumable, not from GitHub). If that download fails, the banner shows 下载素材 and 换成完整包. |
+
+The full package is also the source for the player cache: players can import the same ZIP on the hub. See the [README](README.md#features).
 
 ### 9. Test before game night
 
@@ -707,6 +732,9 @@ The panel reads `config.json` one time, when it starts. If you edit the file, re
 | `speedLimitMbps` | `10` | yes | Tunnel speed limit, for the bandwidth gauge |
 | `dailyLimitGB` | `2` | yes | Daily data budget in GiB. Days start at 00:00 UTC+8. Warning only. |
 | `dailyAutoBroadcast` | `true` | yes | Show players a 流量提醒 bar at 80%, 95%, and 100% |
+| `gamePackage` | `full` | yes | Game package: `full`, or `lite` (art downloads after the install). See step 8. |
+| `playerCache` | `true` | yes | Players' browsers keep the game files (IndexedDB), so a reconnect does not download them through the tunnel again. Players can import the full package ZIP on the hub. |
+| `lang` | `zh` | yes | `zh` or `en`: the default panel language and the language of desktop notifications. The language button at the top right sets it. |
 | `port` | `3000` | no | Public port of the hub. Must be the same as 本地端口 of the tunnel. |
 | `gameInternalPort` | `3001` | no | Port of the game on 127.0.0.1, behind the hub |
 | `panelPort` | `3100` | no | Port of the host panel on 127.0.0.1 |
@@ -732,6 +760,7 @@ On Windows, `~` is your user folder, for example `C:\Users\<you>`.
 |---|---|
 | `config.json` | Your settings |
 | `usage.json` | Today's data count, so a restart does not reset it |
+| `.cache/crc.json` | Saved checksums for the player cache file list. You can delete it. The panel makes it again at the next start. |
 | `~/StrongholdProtocol/current/` | The installed game |
 | `~/StrongholdProtocol/previous/` | The version before the last update, for rollback |
 | `~/StrongholdProtocol/updates/` | Downloads in progress |
@@ -762,6 +791,9 @@ The game is in `~/StrongholdProtocol`, outside the panel folder. A panel update 
 | Windows blocks `frpc.exe` or the `.bat` file | SmartScreen: select More info, then Run anyway. If antivirus removes `frpc.exe`, add an exclusion for the `SakuraFrp` folder. |
 | Linux: "could not extract the ZIP" | Install `unzip` (`sudo apt install unzip`), then click 下载并安装 again |
 | Linux: no desktop notifications | Install `notify-send` (Debian/Ubuntu: `sudo apt install libnotify-bin`). The panel banner works without it. |
+| The game shows placeholder art, or the board or models are missing | The lite package is installed and its art download is not complete. Click 下载素材 on the banner, or select the full package in 设置. |
+| Players download everything again on each visit | Turn on the player cache in 设置. A private window keeps no cache. After a new tunnel address (node or port), the cache starts again for the new address. |
+| A ZIP import on the hub says 不是游戏完整包, or many files are 与本服版本不同 | Download the full package for the same game version as the host (the hub card has the link). Do not use the lite package. |
 | The game does not start | Run `node -v`. It must print `v22.x` or later. Then read the Game logs tab in the panel. |
 
 ## Git clone (optional)

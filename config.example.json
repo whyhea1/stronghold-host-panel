@@ -24,5 +24,8 @@
   ],
   "nodeName": "",
   "dailyLimitGB": 2,
-  "dailyAutoBroadcast": true
+  "dailyAutoBroadcast": true,
+  "gamePackage": "full",
+  "playerCache": true,
+  "lang": "zh"
 }

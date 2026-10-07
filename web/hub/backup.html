@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>备份干员调配 · 卫戍协议</title>
+<script src="/__panel/i18n.js"></script>
 <link rel="stylesheet" href="/__panel/hub.css">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' fill='%230c0f0e'/%3E%3Cpath fill='%234ed8af' d='M5 3h3v2h2V3h4v2h2V3h3v5l-2 2v7l2 2v2H5v-2l2-2v-7L5 8z'/%3E%3C/svg%3E">
 <style>
@@ -82,6 +83,21 @@
   //   sp.name          player name
   //   sp.pref.*        loadout (sp.pref.loadout) and lobby preferences
   // Reconnect tokens (sp.tokens) are deliberately left out: they are tied to one server session.
+  const { T } = I18N;
+  I18N.add({
+    "备份干员调配 · 卫戍协议": "Loadout backup · Stronghold Protocol", "干员调配备份": "Loadout backup", "中转站": "Relay",
+    "玩家名": "Player name", "干员调配": "Loadouts", "名干员有自定义技能 / 模组": "operators with custom skills / modules", "地址": "Address",
+    "干员调配只存在你的浏览器里，按“网址”分开保存。换设备、换浏览器、清理浏览器数据，或者房主换了地址，都需要用备份恢复。": "Loadouts live only in your browser, kept per address. A new device or browser, cleared browser data, or a new host address all need a restore from a backup.",
+    "下载备份文件": "Download backup file", "复制备份码": "Copy backup code",
+    "先关掉所有正在玩的游戏页面再恢复，不然游戏可能会用旧数据覆盖。": "Close all open game pages before you restore, or the game can write its old data over it.",
+    "选择备份文件": "Choose backup file", "或者把备份码粘贴到这里": "Or paste a backup code here", "覆盖并恢复": "Replace and restore", "取消": "Cancel",
+    "（未设置）": "(not set)", "（无）": "(none)", "这个浏览器里还没有任何游戏数据可以备份。": "This browser has no game data to back up yet.",
+    "已下载（{n} 名干员）。": "Downloaded ({n} operators).", "备份码已复制，可以发到微信 / QQ 自己收藏。": "Backup code copied. Send it to yourself to keep it.",
+    "无法自动复制（非 HTTPS 或浏览器限制），已放进下方输入框，请手动复制。": "Cannot copy automatically (no HTTPS, or a browser limit). The code is in the box below: copy it by hand.",
+    "空的": "empty", "不是卫戍协议的备份": "not a Stronghold Protocol backup", "备份里没有可恢复的数据": "the backup has no data to restore",
+    "名干员": "operators", "备份时间": "Backed up", "来自": "From", "读不出来：": "Cannot read it: ", "已恢复。": "Restored.", "进入游戏": "Enter the game",
+  });
+  I18N.apply(document.body);
   const $ = (id) => document.getElementById(id);
   const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
   const keep = (k) => k === "sp.name" || k.startsWith("sp.pref.");
@@ -101,7 +117,7 @@
 
   function showCurrent() {
     const s = snapshot();
-    $("curName").textContent = nameIn(s.data) || "（未设置）";
+    $("curName").textContent = nameIn(s.data) || T("（未设置）");
     $("curOps").textContent = opsIn(s.data);
     $("curOrigin").textContent = location.origin;
   }
@@ -110,7 +126,7 @@
   const say = (el, text, ok) => { el.textContent = text; el.className = "msg " + (ok ? "ok" : "err"); };
   function guardEmpty() {
     const s = snapshot();
-    if (!Object.keys(s.data).length) { say($("outMsg"), "这个浏览器里还没有任何游戏数据可以备份。", false); return null; }
+    if (!Object.keys(s.data).length) { say($("outMsg"), T("这个浏览器里还没有任何游戏数据可以备份。"), false); return null; }
     return s;
   }
 
@@ -121,36 +137,36 @@
     const d = new Date(Date.now() + 8 * 3600e3).toISOString().slice(0, 10).replace(/-/g, "");
     a.href = URL.createObjectURL(blob); a.download = `stronghold-loadout-${d}.json`;
     document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
-    say($("outMsg"), `已下载（${opsIn(s.data)} 名干员）。`, true);
+    say($("outMsg"), T("已下载（{n} 名干员）。", { n: opsIn(s.data) }), true);
   };
   $("cp").onclick = async () => {
     const s = guardEmpty(); if (!s) return;
     const code = MARK + b64e(JSON.stringify(s));
-    try { await navigator.clipboard.writeText(code); say($("outMsg"), "备份码已复制，可以发到微信 / QQ 自己收藏。", true); }
-    catch { $("code").value = code; $("code").select(); say($("outMsg"), "无法自动复制（非 HTTPS 或浏览器限制），已放进下方输入框，请手动复制。", false); }
+    try { await navigator.clipboard.writeText(code); say($("outMsg"), T("备份码已复制，可以发到微信 / QQ 自己收藏。"), true); }
+    catch { $("code").value = code; $("code").select(); say($("outMsg"), T("无法自动复制（非 HTTPS 或浏览器限制），已放进下方输入框，请手动复制。"), false); }
   };
 
   let pending = null;
   function parse(text) {
     text = String(text || "").trim();
-    if (!text) throw new Error("空的");
+    if (!text) throw new Error(T("空的"));
     const obj = JSON.parse(text.startsWith(MARK) ? b64d(text.slice(MARK.length).replace(/\s+/g, "")) : text);
-    if (!obj || obj.app !== "stronghold-protocol" || typeof obj.data !== "object") throw new Error("不是卫戍协议的备份");
+    if (!obj || obj.app !== "stronghold-protocol" || typeof obj.data !== "object") throw new Error(T("不是卫戍协议的备份"));
     const data = {};
     for (const [k, v] of Object.entries(obj.data)) if (keep(k) && typeof v === "string" && v.length < 200000) data[k] = v;
-    if (!Object.keys(data).length) throw new Error("备份里没有可恢复的数据");
+    if (!Object.keys(data).length) throw new Error(T("备份里没有可恢复的数据"));
     return { ...obj, data };
   }
   function preview(obj) {
     pending = obj;
-    $("pv").innerHTML = `<span>玩家名</span><span>${esc(nameIn(obj.data) || "（无）")}</span>
-      <span>干员调配</span><span><b>${opsIn(obj.data)}</b> 名干员</span>
-      <span>备份时间</span><span>${esc(obj.at ? new Date(obj.at).toLocaleString("zh-CN", { timeZone: "Asia/Shanghai", hour12: false }) : "?")}</span>
-      <span>来自</span><span class="dim" style="word-break:break-all">${esc(obj.from || "?")}</span>`;
+    $("pv").innerHTML = `<span>${T("玩家名")}</span><span>${esc(nameIn(obj.data) || T("（无）"))}</span>
+      <span>${T("干员调配")}</span><span><b>${opsIn(obj.data)}</b> ${T("名干员")}</span>
+      <span>${T("备份时间")}</span><span>${esc(obj.at ? new Date(obj.at).toLocaleString(I18N.lang === "en" ? "en-GB" : "zh-CN", { timeZone: "Asia/Shanghai", hour12: false }) : "?")}</span>
+      <span>${T("来自")}</span><span class="dim" style="word-break:break-all">${esc(obj.from || "?")}</span>`;
     $("preview").classList.add("show"); $("inMsg").textContent = "";
   }
   function tryPreview(text) {
-    try { preview(parse(text)); } catch (e) { $("preview").classList.remove("show"); pending = null; say($("inMsg"), "读不出来：" + e.message, false); }
+    try { preview(parse(text)); } catch (e) { $("preview").classList.remove("show"); pending = null; say($("inMsg"), T("读不出来：") + e.message, false); }
   }
   $("pick").onclick = () => $("file").click();
   $("file").onchange = async () => { const f = $("file").files[0]; if (f) tryPreview(await f.text()); $("file").value = ""; };
@@ -162,7 +178,7 @@
     for (const [k, v] of Object.entries(pending.data)) localStorage.setItem(k, v);
     $("preview").classList.remove("show"); pending = null; $("code").value = "";
     showCurrent();
-    $("inMsg").innerHTML = `<span class="ok">已恢复。</span> <a class="btn sm" href="/play" style="margin-left:8px">进入游戏</a>`; $("inMsg").className = "msg ok";
+    $("inMsg").innerHTML = `<span class="ok">${T("已恢复。")}</span> <a class="btn sm" href="/play${I18N.lang === "en" ? "?lang=en" : ""}" style="margin-left:8px">${T("进入游戏")}</a>`; $("inMsg").className = "msg ok";
   };
 </script>
 </body>

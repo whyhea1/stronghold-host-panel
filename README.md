@@ -81,14 +81,21 @@ SakuraFrp 节点  ◄── frpc（命令行子进程，强制直连）
 
 **开服与停服**
 
-「开始联机」同时启动游戏和 `frpc`，「全部停止」关闭全部进程。顶栏实时显示游戏、隧道、中转站状态，以及在线人数、隧道上下行速率（Mbps）、今日流量和游戏版本。
+「开始联机」同时启动游戏和 `frpc`，「全部停止」关闭全部进程。顶栏实时显示游戏、隧道、中转站状态，以及在线人数、隧道上下行速率（Mbps）、CPU 和内存占用、今日流量和游戏版本。
 
 </td>
 <td width="50%" valign="top">
 
 **游戏更新**
 
-从 GitHub Releases 检查 `sganggs/Stronghold-Protocol` 的新版本，一键下载安装，完成后自动重启游戏。上一版本保留在 `previous/`，可回滚。访问 GitHub 先走本机代理端口，再直连，最后用下载镜像；某条线路持续 20 秒低于 100 KB/s 时换下一条。
+从 GitHub Releases 检查 `sganggs/Stronghold-Protocol` 的新版本，一键下载安装，完成后自动重启游戏。安装卡片按步骤显示进度：下载（MB、速度、剩余时间、线路）、解压（文件数）、替换文件、下载素材、启动。上一版本保留在 `previous/`，可回滚。访问 GitHub 先走本机代理端口，再直连，最后用下载镜像；某条线路持续 20 秒低于 100 KB/s 时换下一条。
+
+游戏从 v0.2.0 起分两种安装包，在「设置 → 游戏安装包」中选择：
+
+- **完整包**（默认，推荐，约 430 MB）：带全部美术和音频，还有 3D 棋盘、召唤物模型等只在本机客户端使用的素材。
+- **精简包**（约 22 MB）：装好后面板运行游戏自带的 `tools/setup.mjs`，从游戏素材源下载美术和音频（约 460 MB，可续传，不走 GitHub）。
+
+素材缺失或不完整时，面板显示横幅，可以「下载素材」或「换成完整包」。
 
 </td>
 </tr>
@@ -109,7 +116,7 @@ SakuraFrp 节点  ◄── frpc（命令行子进程，强制直连）
 
 **战况**
 
-显示在线人数、房间、房间成员、房主、准备状态、观战者和 AI。数据来自中转站对游戏 WebSocket 中 `room.state` 帧的被动读取：不向游戏发送任何数据，不修改游戏文件。
+显示在线人数、房间、房间成员、房主、准备状态、观战者和 AI。每个房间有「加入」「观战」按钮，在本机打开游戏并直接进入；「复制邀请」「复制观战链接」复制发给玩家的链接。数据来自中转站对游戏 WebSocket 中 `room.state` 帧的被动读取：不修改游戏文件。
 
 <img src="docs/images/card-live.png" alt="战况">
 
@@ -155,9 +162,31 @@ SakuraFrp 节点  ◄── frpc（命令行子进程，强制直连）
 
 </td>
 </tr>
+<tr>
+<td valign="top">
+
+**主机负载**
+
+整台电脑的 CPU 和内存占用（最近 3 分钟曲线），以及游戏服务器、`frpc`、面板各自的 CPU 和常驻内存，还有磁盘剩余空间和负载均值。只在面板页面打开时采样，每 2 秒一次。
+
+<img src="docs/images/card-system.png" alt="主机负载">
+
+</td>
+<td valign="top">
+
+**省流量：玩家缓存**
+
+SakuraFrp 自动 HTTPS 使用自签名证书，浏览器在这种页面上不保存 HTTP 缓存，所以以前玩家每次重连都会通过隧道重新下载约 500 MB 美术和音频。现在中转站把游戏文件存进玩家浏览器（IndexedDB），按文件 CRC32 和大小校验，游戏更新后只重新下载改过的文件。
+
+玩家还可以在中转站「省流量」卡片中导入官方完整包 ZIP（从 GitHub 或国内镜像下载，不经过房主隧道），第一次进入也几乎不占隧道流量。房主可在「设置」中关闭此功能。
+
+<img src="docs/images/hub-cache-light.png" alt="中转站省流量卡片" width="300">
+
+</td>
+</tr>
 </table>
 
-界面支持亮色、暗色和跟随系统三种主题，并按窗口宽度在 3 栏、2 栏、1 栏之间切换。游戏已安装时，面板直接使用游戏自带的字体。
+界面默认简体中文，右上角可切换 English。中转站、离线页和备份页同样支持两种语言，并默认跟随玩家在游戏内选择的语言。界面支持亮色、暗色和跟随系统三种主题，并按窗口宽度在 3 栏、2 栏、1 栏之间切换。游戏已安装时，面板直接使用游戏自带的字体。
 
 ## 玩家端页面
 
@@ -168,8 +197,8 @@ SakuraFrp 节点  ◄── frpc（命令行子进程，强制直连）
 
 | 路径（端口 3000） | 内容 |
 |---|---|
-| `/` | **中转站**：服务器状态、房间与成员、今日流量。实时推送，无需刷新。 |
-| `/play` | 游戏本体。`/?room=CODE` 或 `/play?room=CODE` 可直接加入房间。 |
+| `/` | **中转站**：服务器状态、房间与成员（每个房间有「加入」「观战」按钮）、今日流量、省流量缓存。实时推送，无需刷新。 |
+| `/play` | 游戏本体。`/play?room=CODE` 进入后直接加入房间，`/play?watch=CODE` 直接观战（对局中也可以）。 |
 | `/backup` | **干员调配备份**：游戏将干员配置保存在浏览器存储中，并按网址区分。更换设备、浏览器或房主地址前，应先导出备份文件或备份码。 |
 | `/status.json` | 中转站数据（JSON）。`/__panel/events` 以实时流提供同样的数据。 |
 
@@ -177,7 +206,7 @@ SakuraFrp 节点  ◄── frpc（命令行子进程，强制直连）
 
 ## 配置
 
-首次启动时，面板根据 `lib/core.mjs` 中的默认值生成 `config.json`。标准安装无需修改。以下参数可在面板「设置」中修改，保存后立即生效：`publicUrl`、`frpcBin`、`frpcConfig`、`sakuraToken`、`nodeName`、`speedLimitMbps`、`dailyLimitGB`、`dailyAutoBroadcast`。其他参数（端口、游戏目录、代理等）需编辑文件后重启面板。
+首次启动时，面板根据 `lib/core.mjs` 中的默认值生成 `config.json`。标准安装无需修改。以下参数可在面板「设置」中修改，保存后立即生效：`publicUrl`、`frpcBin`、`frpcConfig`、`sakuraToken`、`nodeName`、`speedLimitMbps`、`dailyLimitGB`、`dailyAutoBroadcast`、`gamePackage`、`playerCache`。`lang` 由右上角的语言按钮设置。其他参数（端口、游戏目录、代理等）需编辑文件后重启面板。
 
 完整参数表见 [安装指南：config.json 参数](INSTALL.md#configjson-参数)。`config.json` 可能包含访问密钥，已加入 `.gitignore`。
 
@@ -196,12 +225,14 @@ SakuraFrp 节点  ◄── frpc（命令行子进程，强制直连）
 | 开着代理软件（TUN / 全局接管模式）时隧道断开或延迟高 | `frpc` 流量进了代理。为 `frpc` 进程添加直连规则，见 [第 5 步](INSTALL.md#5-代理软件设置)。 |
 | 检查更新失败 | 代理软件未开启，或其端口不在 `proxyPorts` 中。设置 `ghProxy`。 |
 | 提示「隧道已在线」 | 已有旧的 `frpc` 连接同一条隧道。先断开再连接；仍无效时关闭 Sakura 启动器。 |
+| 游戏画面是占位图 | 装的是精简包，素材还没下载。点横幅上的「下载素材」，或「换成完整包」。 |
+| 玩家每次进游戏都很慢、很费流量 | 确认「设置」中玩家缓存已开启。玩家换了浏览器、用无痕模式，或你换了隧道地址时，缓存需要重新建立。 |
 
 更多问题见 [安装指南：故障排查](INSTALL.md#故障排查)。
 
 ## 发布版本
 
-在 GitHub 上用新标签（例如 `v1.1.0`）创建并发布 Release 后，`.github/workflows/release.yml` 会为 macOS、Windows、Linux 各构建一个 ZIP 并上传到该 Release。每个 ZIP 只包含面板、文档、示例配置和对应系统的启动文件。
+在 GitHub 上用新标签（例如 `v1.2.0`）创建并发布 Release 后，`.github/workflows/release.yml` 会为 macOS、Windows、Linux 各构建一个 ZIP 并上传到该 Release。每个 ZIP 只包含面板、文档、示例配置和对应系统的启动文件。
 
 ## 目录结构
 
@@ -220,9 +251,11 @@ lib/game.mjs          游戏进程、健康检查、大厅日志解析
 lib/tunnel.mjs        frpc 进程
 lib/updater.mjs       从 GitHub 更新游戏
 lib/sakura.mjs        SakuraFrp API
+lib/sysstats.mjs      主机负载：CPU、内存、磁盘、进程
+lib/assetcache.mjs    玩家缓存的文件清单（CRC32 + 大小）
 lib/api.mjs           主机面板（127.0.0.1:3100）
-web/                  面板界面
-web/hub/              中转站页面和游戏内横幅脚本
+web/                  面板界面（web/i18n.js 为中英文切换）
+web/hub/              中转站页面、游戏内横幅脚本、玩家缓存（cache.js）
 ```
 
 <details>
@@ -294,14 +327,21 @@ Your browser ──► host panel :3100 (127.0.0.1 only, other devices cannot co
 
 **Start and stop**
 
-开始联机 starts the game and `frpc` together. 全部停止 stops everything. The top bar shows the game, tunnel, and hub status, the players online, the tunnel speed (Mbps), today's data use, and the game version.
+开始联机 starts the game and `frpc` together. 全部停止 stops everything. The top bar shows the game, tunnel, and hub status, the players online, the tunnel speed (Mbps), the CPU and memory use, today's data use, and the game version.
 
 </td>
 <td width="50%" valign="top">
 
 **Game updates**
 
-The panel checks GitHub releases of `sganggs/Stronghold-Protocol`, installs a new version with one click, then restarts the game. It keeps the old version in `previous/` for rollback. For GitHub, the panel tries local proxy ports first, then direct, then download mirrors. A route that stays under 100 KB/s for 20 s is dropped for the next one.
+The panel checks GitHub releases of `sganggs/Stronghold-Protocol`, installs a new version with one click, then restarts the game. The install card shows each step: download (MB, speed, time left, route), extract (file count), install files, download art, and start. It keeps the old version in `previous/` for rollback. For GitHub, the panel tries local proxy ports first, then direct, then download mirrors. A route that stays under 100 KB/s for 20 s is dropped for the next one.
+
+From v0.2.0, the game has two packages. Select one in Settings → 游戏安装包:
+
+- **Full** (default, recommended, about 430 MB): all art and audio, also client-only art such as the 3D board and the summon models.
+- **Lite** (about 22 MB): after the install, the panel runs the game's own `tools/setup.mjs`, which downloads the art and audio from the game's asset sources (about 460 MB, resumable, not from GitHub).
+
+When art is missing or incomplete, a banner offers 下载素材 (download art) or 换成完整包 (switch to the full package).
 
 </td>
 </tr>
@@ -322,7 +362,7 @@ The panel builds the player link from `server_addr` and `remote_port` in `frpc.i
 
 **Live rooms**
 
-Players online, rooms, room members, the room host, ready state, spectators, and bots. The hub reads `room.state` frames from the game's WebSocket traffic. It sends nothing to the game and changes no game files.
+Players online, rooms, room members, the room host, ready state, spectators, and bots. Each room has 加入 (join) and 观战 (watch) buttons that open the game on this computer and enter the room. 复制邀请 and 复制观战链接 copy the links for players. The hub reads `room.state` frames from the game's WebSocket traffic and changes no game files.
 
 <img src="docs/images/card-live.png" alt="战况 card">
 
@@ -368,9 +408,31 @@ Traffic, data plans, node status, and node load through SakuraFrp API v4, and a 
 
 </td>
 </tr>
+<tr>
+<td valign="top">
+
+**Host load**
+
+The card shows the CPU and memory use of the whole computer, with a 3-minute graph. It also shows the CPU and resident memory of the game server, `frpc`, and the panel, the free disk space, and the load average. The panel samples every 2 seconds, only while the panel page is open.
+
+<img src="docs/images/card-system.png" alt="主机负载 card">
+
+</td>
+<td valign="top">
+
+**Data saver: player cache**
+
+SakuraFrp 自动 HTTPS uses a self-signed certificate, and browsers keep no HTTP cache on such pages. Before, each reconnect downloaded about 500 MB of art and audio through the tunnel again. Now the hub keeps the game files in the player's browser (IndexedDB) and checks each file by CRC32 and size. After a game update, players download only the changed files.
+
+On the hub's 省流量 card, players can also import the official full package ZIP. They download it from GitHub or a mirror in China, not through the host's tunnel, so even the first visit uses almost no tunnel data. The host can turn this off in Settings.
+
+<img src="docs/images/hub-cache-light.png" alt="Data saver card on the hub" width="300">
+
+</td>
+</tr>
 </table>
 
-The UI has light, dark, and auto themes. The layout changes from 3 columns to 2 to 1 for the window width. The panel loads the game's fonts from the game install when they are available.
+The UI is in Simplified Chinese by default. The button at the top right changes it to English. The hub, the offline page, and the backup page also have both languages, and they follow the language that the player selected in the game. The UI has light, dark, and auto themes. The layout changes from 3 columns to 2 to 1 for the window width. The panel loads the game's fonts from the game install when they are available.
 
 ## Player pages
 
@@ -381,8 +443,8 @@ The UI has light, dark, and auto themes. The layout changes from 3 columns to 2 
 
 | Path (port 3000) | Page |
 |---|---|
-| `/` | **中转站**: players online, rooms, room members, daily data use. Live updates, no refresh. |
-| `/play` | The game. `/?room=CODE` and `/play?room=CODE` join a room. |
+| `/` | **中转站**: players online, rooms and members (each room has join and watch buttons), daily data use, the data saver cache. Live updates, no refresh. |
+| `/play` | The game. `/play?room=CODE` joins a room after the player enters. `/play?watch=CODE` watches a room, also during a match. |
 | `/backup` | **干员调配 backup**: the game keeps loadouts in browser storage, per address. Players export a backup file or code before they change device, browser, or host address. |
 | `/status.json` | 中转站 data as JSON. `/__panel/events` sends the same data as a live stream. |
 
@@ -390,7 +452,7 @@ When the game is down, `/play` shows an offline page with the host announcement.
 
 ## Configuration
 
-The panel creates `config.json` on first start with the defaults from `lib/core.mjs`. A standard setup needs no changes. You can change these keys in the panel settings, and they apply at once: `publicUrl`, `frpcBin`, `frpcConfig`, `sakuraToken`, `nodeName`, `speedLimitMbps`, `dailyLimitGB`, `dailyAutoBroadcast`. Change the other keys (ports, game folder, proxy) in the file, then restart the panel.
+The panel creates `config.json` on first start with the defaults from `lib/core.mjs`. A standard setup needs no changes. You can change these keys in the panel settings, and they apply at once: `publicUrl`, `frpcBin`, `frpcConfig`, `sakuraToken`, `nodeName`, `speedLimitMbps`, `dailyLimitGB`, `dailyAutoBroadcast`, `gamePackage`, `playerCache`. The language button at the top right sets `lang`. Change the other keys (ports, game folder, proxy) in the file, then restart the panel.
 
 [INSTALL.md](INSTALL.md#configjson) explains each key. Git ignores `config.json` because it can contain the SakuraFrp access key. Git also ignores `usage.json`, which stores today's data count.
 
@@ -409,12 +471,14 @@ The panel creates `config.json` on first start with the defaults from `lib/core.
 | The tunnel fails or lags while a proxy app is on (TUN or capture-all mode) | `frpc` goes through the proxy. Add a direct rule for the `frpc` process. See [step 5](INSTALL.md#5-if-you-use-a-proxy-app). |
 | GitHub check fails | The proxy app is off, or its port is not in `proxyPorts`. Set `ghProxy`. |
 | Tunnel shows 隧道已在线 | An old `frpc` is still connected to the same tunnel. Click 断开, then 连接. If that does not help, close the SakuraFrp launcher app. |
+| The game shows placeholder art | The lite package is installed and its art is not downloaded yet. Click 下载素材 on the banner, or 换成完整包. |
+| Each visit is slow and uses much data | Make sure the player cache is on in Settings. A new browser, a private window, or a new tunnel address starts the cache again. |
 
 For more, see [Troubleshooting](INSTALL.md#troubleshooting).
 
 ## Releases
 
-To make a release, create a release on GitHub with a new tag (for example `v1.1.0`), then publish it. The workflow in `.github/workflows/release.yml` then builds one ZIP each for macOS, Windows, and Linux, and adds the ZIPs to the release. Each ZIP contains only the panel, the docs, the example config, and the start file for that system.
+To make a release, create a release on GitHub with a new tag (for example `v1.2.0`), then publish it. The workflow in `.github/workflows/release.yml` then builds one ZIP each for macOS, Windows, and Linux, and adds the ZIPs to the release. Each ZIP contains only the panel, the docs, the example config, and the start file for that system.
 
 ## Layout
 
@@ -433,9 +497,11 @@ lib/game.mjs          game process, health check, lobby log parser
 lib/tunnel.mjs        frpc process
 lib/updater.mjs       game updates from GitHub
 lib/sakura.mjs        SakuraFrp API
+lib/sysstats.mjs      host load: CPU, memory, disk, processes
+lib/assetcache.mjs    file list for the player cache (CRC32 + size)
 lib/api.mjs           host panel on 127.0.0.1:3100
-web/                  panel UI
-web/hub/              hub pages and the in-game banner script
+web/                  panel UI (web/i18n.js switches Chinese / English)
+web/hub/              hub pages, the in-game banner script, the player cache (cache.js)
 ```
 
 <details>

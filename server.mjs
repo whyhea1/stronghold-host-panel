@@ -9,19 +9,25 @@
 //   lib/tunnel.mjs   SakuraFrp frpc
 //   lib/updater.mjs  GitHub release update
 //   lib/sakura.mjs   SakuraFrp account / node / 签到
+//   lib/sysstats.mjs CPU / memory / disk / process load for the panel
+//   lib/assetcache.mjs  file list behind the players' browser cache (web/hub/cache.js)
 //   lib/api.mjs      host panel on 127.0.0.1:3100
 //   web/             panel UI (index.html, app.css, app.js) and hub pages (web/hub/)
 import { openTarget, OS_NAME } from "./lib/platform.mjs";
 import { config, procs, log } from "./lib/core.mjs";
 import { killTree } from "./lib/util.mjs";
 import { startHub, stopHub } from "./lib/hub.mjs";
-import { checkUpdate } from "./lib/updater.mjs";
+import { checkUpdate, checkAssets } from "./lib/updater.mjs";
+import { startSysStats } from "./lib/sysstats.mjs";
+import { buildCacheManifest } from "./lib/assetcache.mjs";
 import { startSakuraPolling } from "./lib/sakura.mjs";
 import { startPanel } from "./lib/api.mjs";
 import { saveUsage } from "./lib/usage.mjs";
 
 startHub();
 startSakuraPolling();
+startSysStats();
+buildCacheManifest("panel start").then(() => checkAssets());
 startPanel(() => {
   const url = `http://localhost:${config.panelPort}`;
   log("panel", `panel ready on ${OS_NAME} — ${url}`);
