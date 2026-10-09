@@ -282,7 +282,7 @@ sing-box 配置中，如果直连出站的 tag 不是 `direct`，请换成你自
 
 | 安装包 | 大小 | 说明 |
 |---|---|---|
-| 完整包（默认，推荐） | 约 430 MB | 全部美术和音频，包括 3D 棋盘和召唤物模型 |
+| 完整包（默认，推荐） | 约 500 MB | 全部美术和音频，包括 3D 棋盘和召唤物模型 |
 | 精简包 | 约 22 MB | 装好后面板运行游戏自带的 `tools/setup.mjs` 下载素材（约 460 MB，可续传，不走 GitHub）。素材下载失败时，横幅上有「下载素材」和「换成完整包」 |
 
 完整包也是玩家缓存的来源：玩家可以在中转站导入同一个 ZIP，见 [README](README.md#功能)。
@@ -313,6 +313,8 @@ sing-box 配置中，如果直连出站的 tag 不是 `direct`，请换成你自
 | `dailyLimitGB` | `2` | 是 | 每日流量预算（GiB），以 UTC+8 零点为日界，仅提醒 |
 | `dailyAutoBroadcast` | `true` | 是 | 在 80%、95%、100% 时向玩家显示「流量提醒」 |
 | `gamePackage` | `full` | 是 | 游戏安装包：`full`（完整包）或 `lite`（精简包，素材另下），见第 8 步 |
+| `updateMode` | `patch` | 是 | 游戏更新方式：`patch`（更新包，只下改动的文件，依次应用）或 `full`（每次下完整包） |
+| `autoCheckMin` | `60` | 是 | 自动检查新版本的间隔（分钟），`0` 为关闭，设置页可选 5–10080；只提醒，不自动安装 |
 | `playerCache` | `true` | 是 | 玩家浏览器保存游戏文件（IndexedDB），重连不再通过隧道重新下载；中转站可导入完整包 ZIP |
 | `lang` | `zh` | 是 | `zh` 或 `en`：面板默认语言和桌面通知语言，由右上角语言按钮设置 |
 | `port` | `3000` | 否 | 中转站对外端口，必须与隧道的本地端口一致 |
@@ -360,6 +362,8 @@ Windows 上 `~` 指用户文件夹，例如 `C:\Users\<用户名>`。
 
 | 现象 | 处理 |
 |---|---|
+| 日志出现「更新包无法用在当前文件夹上」，自动改下了完整包 | 正常的回退：版本不连续、校验失败，或更新包合计比完整包大。`current/` 没被改动，无需处理。 |
+| 从 v0.1.x 或 v0.2.0 更新时没有走更新包 | 更新包从 v0.2.1 起才有，且每个只能用在紧邻的上一版。链条断开时面板直接下完整包。 |
 | 玩家看到 `501 Not Implemented` | 使用了 `http://`。发送 `https://` 链接；如果自动 HTTPS 未启用，重做第 4 步。 |
 | `https://` 报 `ERR_SSL_PROTOCOL_ERROR` | 当前运行的 `frpc` 未使用自动 HTTPS。运行 `grep auto_https ~/SakuraFrp/frpc.ini`（Windows：`Select-String auto_https ~\SakuraFrp\frpc.ini`）。无输出时，重新运行第 4 步的 `-w` 命令，然后在面板中重启隧道。 |
 | 开着代理软件时隧道失败或延迟高 | `frpc` 经过了代理。添加第 5.1 步的规则，并确认连接显示 DIRECT。 |
@@ -702,7 +706,7 @@ From v0.2.0, the game has two packages. Select one in 设置 → 游戏安装包
 
 | Package | Size | Notes |
 |---|---|---|
-| Full (default, recommended) | about 430 MB | All art and audio, also the 3D board and the summon models |
+| Full (default, recommended) | about 500 MB | All art and audio, also the 3D board and the summon models |
 | Lite | about 22 MB | After the install, the panel runs the game's own `tools/setup.mjs` to download the art (about 460 MB, resumable, not from GitHub). If that download fails, the banner shows 下载素材 and 换成完整包. |
 
 The full package is also the source for the player cache: players can import the same ZIP on the hub. See the [README](README.md#features).
@@ -733,6 +737,8 @@ The panel reads `config.json` one time, when it starts. If you edit the file, re
 | `dailyLimitGB` | `2` | yes | Daily data budget in GiB. Days start at 00:00 UTC+8. Warning only. |
 | `dailyAutoBroadcast` | `true` | yes | Show players a 流量提醒 bar at 80%, 95%, and 100% |
 | `gamePackage` | `full` | yes | Game package: `full`, or `lite` (art downloads after the install). See step 8. |
+| `updateMode` | `patch` | yes | Game update mode: `patch` (update packs, only the changed files, applied in order) or `full` (the full package every time) |
+| `autoCheckMin` | `60` | yes | Minutes between automatic update checks. `0` turns it off. The page offers 5–10080. It only notifies and never installs. |
 | `playerCache` | `true` | yes | Players' browsers keep the game files (IndexedDB), so a reconnect does not download them through the tunnel again. Players can import the full package ZIP on the hub. |
 | `lang` | `zh` | yes | `zh` or `en`: the default panel language and the language of desktop notifications. The language button at the top right sets it. |
 | `port` | `3000` | no | Public port of the hub. Must be the same as 本地端口 of the tunnel. |
@@ -780,6 +786,8 @@ The game is in `~/StrongholdProtocol`, outside the panel folder. A panel update 
 
 | Problem | Fix |
 |---|---|
+| The log says the update packs do not fit this folder, and the panel installed the full package | This is the normal fallback: the versions have a gap, a check failed, or the packs are larger than the full package. `current/` did not change. Do nothing. |
+| An update from v0.1.x or v0.2.0 did not use update packs | Update packs exist from v0.2.1. Each one applies to exactly one earlier version. If the chain has a gap, the panel downloads the full package. |
 | Players get `501 Not Implemented` | They used `http://`. Send the `https://` link. If 自动 HTTPS is off, do step 4 again. |
 | `https://` gives `ERR_SSL_PROTOCOL_ERROR` | The running `frpc` does not use 自动 HTTPS. Run `grep auto_https ~/SakuraFrp/frpc.ini` (Windows: `Select-String auto_https ~\SakuraFrp\frpc.ini`). If it prints nothing, run the `-w` command from step 4 again. Then restart the tunnel in the panel. |
 | The tunnel fails or lags, and a proxy app is on | `frpc` goes through the proxy. Add the rules from step 5.1, then make sure that the connection shows DIRECT. |

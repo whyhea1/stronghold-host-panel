@@ -12,6 +12,22 @@ const { T } = I18N;
 const EN = I18N.lang === "en";
 
 I18N.add({
+  "改用完整包": "Use the full package instead", "不用更新包，下载整个完整包": "Skip the update packs and download the whole full package",
+  "自动检查": "Auto check", "游戏更新方式": "Game update mode", "自动检查更新": "Check for updates automatically",
+  "更新包（只下改动的文件，推荐）": "Update packs (only the changed files, recommended)", "完整包（每次下整个包）": "Full package (the whole package every time)",
+  "关闭": "Off", "每 15 分钟": "Every 15 min", "每 30 分钟": "Every 30 min", "每 1 小时（默认）": "Every hour (default)", "每 3 小时": "Every 3 h", "每 6 小时": "Every 6 h", "每 24 小时": "Every 24 h",
+  "每 {n} 分钟": "every {n} min", "每 {n} 小时": "every {n} h", "上次 {t}": "last {t}",
+  "更新包 {n} 个": "{n} update pack(s)", "更新包": "Update pack", "下载更新包": "Download update packs", "应用更新包": "Apply update packs",
+  "更新包 {i}/{n} · {t}": "Pack {i}/{n} · {t}",
+  "只下载改动的文件：{list}，依次应用（共 {a}，完整包要 {b}）。游戏继续运行，所有更新包准备好并通过校验后才停服换文件，旧版本保留在 previous/。":
+    "Only the changed files: {list}, applied in order ({a} in total, the full package is {b}). The game keeps running. It stops only after every pack is prepared and checked, and the old version stays in previous/.",
+  "找不到连续的更新包（已装 {v}），改下完整包。旧版本保留在 previous/。": "No unbroken chain of update packs from {v}, so the whole package is used. The old version stays in previous/.",
+  "更新包合计 {a}，比完整包 {b} 还大，改下完整包。旧版本保留在 previous/。": "The update packs add up to {a}, more than the full package ({b}), so the whole package is used. The old version stays in previous/.",
+  "更新包无法用在当前文件夹上（{why}），已改为下载完整包。原文件夹没有被改动。": "The update packs do not fit this folder ({why}), so the full package is used. The old folder was not changed.",
+  "版本不连续": "versions do not follow each other", "文件校验未通过": "the file check failed", "更新包格式不对": "the pack format is wrong",
+  "复制当前版本 {a} / {b}": "Copying the current version {a} / {b}", "更新包 {i}/{n} · {t}：写入 {a} / {b}": "Pack {i}/{n} · {t}: writing {a} / {b}",
+  "更新包 {i}/{n} · {t}：游戏校验文件…": "Pack {i}/{n} · {t}: the game checks the files...", "替换文件，重启游戏…": "Swapping files, restarting the game...",
+  "磁盘空间不足": "Not enough disk space", "更新包下载失败": "Update pack download failed",
   "卫戍协议 · 主机面板": "Stronghold Protocol · Host panel",
   "开始联机": "Start session", "全部停止": "Stop all", "自动": "Auto", "浅色": "Light", "深色": "Dark",
   "主题：自动 / 浅色 / 深色": "Theme: auto / light / dark", "界面语言 / Language": "Language / 界面语言",
@@ -35,7 +51,7 @@ I18N.add({
   "监控节点": "Node to watch", "留空 = 按 frpc.ini 自动识别": "Empty = from frpc.ini", "frpc 程序路径": "frpc program path",
   "frpc 配置路径": "frpc config path", "SakuraFrp 访问密钥": "SakuraFrp access key (访问密钥)", "带宽上限 (Mbps)": "Bandwidth limit (Mbps)",
   "每日流量上限 (GiB)": "Daily data limit (GiB)", "游戏安装包": "Game package",
-  "完整包（推荐，约 430 MB）": "Full (recommended, about 430 MB)", "精简包（约 22 MB，素材另下约 460 MB）": "Lite (about 22 MB, art about 460 MB more)",
+  "完整包（推荐，约 500 MB）": "Full (recommended, about 500 MB)", "精简包（约 22 MB，素材另下约 460 MB）": "Lite (about 22 MB, art about 460 MB more)",
   "到 80% / 95% / 100% 时自动提醒玩家": "Notify players at 80% / 95% / 100%",
   "玩家浏览器保存游戏文件，重连不再走隧道下载": "Players' browsers keep the game files, so a reconnect downloads nothing through the tunnel",
   "保存设置": "Save settings", "访问密钥留空则保留已保存的值，或自动从 frpc.ini 的": "An empty key keeps the saved one, or the panel reads", "读取。": "from frpc.ini.",
@@ -161,6 +177,8 @@ function render() {
   $("gup").textContent = h ? fmtUp(h.uptimeSec) : "—";
   $("gport").textContent = S.hub.bound ? `127.0.0.1:${S.gamePort}  ←  ${T("中转 :{p}", { p: S.port })}` : `0.0.0.0:${S.port}${T("（直连）")}`;
   $("gpkg").textContent = pkgText();
+  const ac = S.autoCheck || {};
+  $("gauto").textContent = ac.min ? everyText(ac.min) + (ac.last ? " · " + T("上次 {t}", { t: fmtT(ac.last) }) : "") : T("关闭");
 
   $("tunaddr").textContent = S.publicUrl || T("未设置");
   const n = S.sakura && S.sakura.myNode;
@@ -197,6 +215,9 @@ function pkgText() {
 
 // ---- install / update card ------------------------------------------------------------------------------------
 const STEP_NAME = { download: "下载安装包", extract: "解压", install: "替换文件", assets: "下载美术和音频", start: "启动游戏" };
+const STEP_PATCH = { download: "下载更新包", install: "应用更新包" };
+const FALL_WHY = { base: "版本不连续", verify: "文件校验未通过", format: "更新包格式不对" };
+const everyText = (m) => m >= 60 && m % 60 === 0 ? T("每 {n} 小时", { n: m / 60 }) : T("每 {n} 分钟", { n: m });
 let dismissedAt = 0;
 function renderUpdate() {
   if (!S) return;
@@ -206,26 +227,34 @@ function renderUpdate() {
   const card = $("updatecard");
   card.classList.toggle("hidden", !(running || finished || offer));
   card.classList.toggle("alert--bad", u.phase === "error" && finished && !running);
+  const P = S.plan, patch = !!(P && P.kind === "patch");
   const size = S.latestSize ? ` · ${(S.latestSize / 1048576).toFixed(0)} MB` : "";
-  const pkgName = S.latestPackage === "lite" ? T("精简包") : T("完整包");
+  const pkgName = patch ? T("更新包 {n} 个", { n: P.count }) : S.latestPackage === "lite" ? T("精简包") : T("完整包");
   let title, hint = T("下载和解压期间游戏继续运行；安装时玩家会看到离线页和你的公告，装好后自动重启。旧版本保留在 previous/。");
+  if (S.updateAvailable && P && !running && !finished) {
+    if (patch) hint = T("只下载改动的文件：{list}，依次应用（共 {a}，完整包要 {b}）。游戏继续运行，所有更新包准备好并通过校验后才停服换文件，旧版本保留在 previous/。", { list: [S.version, ...P.tags].join(" → "), a: bytes(P.bytes), b: bytes(P.fullBytes) });
+    else if (P.why === "gap") hint = T("找不到连续的更新包（已装 {v}），改下完整包。旧版本保留在 previous/。", { v: S.version });
+    else if (P.why === "big") hint = T("更新包合计 {a}，比完整包 {b} 还大，改下完整包。旧版本保留在 previous/。", { a: bytes(P.patchBytes), b: bytes(P.bytes) });
+  }
   if (running) {
     title = u.kind === "assets" ? T("正在下载素材") : T("正在安装 {v}", { v: u.tag || "" });
     if (u.kind === "assets") hint = T("游戏继续运行。可以随时停止，下次会续传。");
   }
   else if (finished && u.phase === "done") { title = u.kind === "assets" ? T("素材下载完成") : T("安装完成"); hint = u.restartHint ? T("素材已下载。重启游戏服务器后，玩家才能看到新素材（会断线）。") : u.kind === "assets" || !u.from ? "" : T("旧版本在 previous/。"); }
-  else if (finished) { title = u.kind === "assets" ? T("素材下载未完成") : T("安装失败"); hint = u.error === "assets" ? T("素材下载会续传：再点一次即可。") : T("失败步骤见日志（面板 / 游戏）。"); }
+  else if (finished) { title = u.kind === "assets" ? T("素材下载未完成") : T("安装失败"); hint = u.error === "assets" ? T("素材下载会续传：再点一次即可。") : u.error === "space" ? T("磁盘空间不足") + "。" : T("失败步骤见日志（面板 / 游戏）。"); }
   else if (S.packageSwitch) { title = T("可以换成完整包 {v}", { v: S.latestVersion }); hint = T("已安装精简包。设置里选的是完整包：带 3D 棋盘和召唤物模型等本机客户端素材。"); }
   else title = S.version ? T("游戏有新版本 {v}", { v: S.latestVersion }) : T("安装游戏 {v}", { v: S.latestVersion || "" });
   $("updtitle").textContent = title;
   $("updtag").textContent = running || finished || S.packageSwitch || !S.version ? "" : `${S.version} → ${S.latestVersion}`;
   $("updsize").textContent = running || finished ? "" : ` · ${pkgName}${size}`;
+  if (u.fellBack && (running || finished) && u.kind !== "assets") hint = T("更新包无法用在当前文件夹上（{why}），已改为下载完整包。原文件夹没有被改动。", { why: T(FALL_WHY[u.fellBack] || u.fellBack) });
   $("updhint").textContent = hint;
   $("updhint").classList.toggle("hidden", !hint);
 
   const btn = $("btnupd");
   btn.classList.toggle("hidden", running || (finished && u.phase === "done"));
   btn.textContent = finished && u.phase === "error" ? T("重试") : S.packageSwitch ? T("重新安装为完整包") : T("下载并安装");
+  $("btnupdfull").classList.toggle("hidden", !(patch && S.updateAvailable && !running && !finished));
   btn.dataset.mode = finished && u.phase === "error" && u.kind === "assets" ? "assets" : S.packageSwitch && !S.updateAvailable ? "switch" : "update";
   $("btnupdok").classList.toggle("hidden", !(finished && !running));
   $("btnupdstop").classList.toggle("hidden", !(running && (u.steps || []).some((s) => s.id === "assets" && s.status === "run")));
@@ -236,12 +265,20 @@ function renderUpdate() {
   if (!show) return;
   ol.innerHTML = (u.steps || []).filter((s) => s.status !== "skip").map((s) => {
     let det = "", pct = null;
+    const pk = u.kind === "patch";
     if (s.id === "download" && (s.status === "run" || s.status === "done") && u.dl) {
       const d = u.dl;
       pct = d.total ? Math.min(100, (d.received / d.total) * 100) : null;
       det = s.status === "run"
-        ? T("{a} / {b} · {s}/s · 剩余 {e}", { a: MB(d.received), b: d.total ? MB(d.total) : "?", s: MB(d.bps || 0), e: d.eta == null ? "—" : dur(d.eta) }) + (d.route ? T("（{r}）", { r: d.route }) : "")
+        ? (pk && u.n > 1 ? T("更新包 {i}/{n} · {t}", { i: u.cur, n: u.n, t: u.curTag || "" }) + " · " : "") +
+          T("{a} / {b} · {s}/s · 剩余 {e}", { a: MB(d.received), b: d.total ? MB(d.total) : "?", s: MB(d.bps || 0), e: d.eta == null ? "—" : dur(d.eta) }) + (d.route ? T("（{r}）", { r: d.route }) : "")
         : MB(d.total || d.received);
+    } else if (s.id === "install" && s.status === "run" && pk && u.ip) {
+      const ip = u.ip, f = (x) => (x || 0).toLocaleString();
+      if (ip.phase === "copy") { pct = ip.total ? Math.min(100, (ip.files / ip.total) * 100) : null; det = T("复制当前版本 {a} / {b}", { a: f(ip.files), b: f(ip.total) }); }
+      else if (ip.phase === "apply") { pct = ip.total ? Math.min(100, (ip.files / ip.total) * 100) : null; det = T("更新包 {i}/{n} · {t}：写入 {a} / {b}", { i: ip.i, n: ip.n, t: ip.tag, a: f(ip.files), b: f(ip.total) }); }
+      else if (ip.phase === "verify") det = T("更新包 {i}/{n} · {t}：游戏校验文件…", { i: ip.i, n: ip.n, t: ip.tag });
+      else det = T("替换文件，重启游戏…");
     } else if (s.id === "extract" && s.status === "run" && u.ex) {
       pct = u.ex.total ? Math.min(100, (u.ex.files / u.ex.total) * 100) : null;
       det = T("{a} / {b} 个文件", { a: u.ex.files.toLocaleString(), b: u.ex.total ? u.ex.total.toLocaleString() : "?" });
@@ -252,7 +289,7 @@ function renderUpdate() {
     }
     if ((s.status === "done" || s.status === "fail") && s.secs != null && s.id !== "download") det = (det ? det + " · " : "") + T("用时 {t}", { t: dur(s.secs) });
     else if (s.status === "done" && s.id === "download" && s.secs != null) det += " · " + T("用时 {t}", { t: dur(s.secs) });
-    return `<li class="${s.status}"><div><span class="s-name">${esc(T(STEP_NAME[s.id] || s.id))}</span>${det ? `<span class="s-det num">${esc(det)}</span>` : ""}</div>` +
+    return `<li class="${s.status}"><div><span class="s-name">${esc(T((pk && STEP_PATCH[s.id]) || STEP_NAME[s.id] || s.id))}</span>${det ? `<span class="s-det num">${esc(det)}</span>` : ""}</div>` +
       (pct != null && s.status === "run" ? `<div class="bar"><i style="width:${pct.toFixed(1)}%"></i></div>` : "") + "</li>";
   }).join("");
 }
@@ -262,6 +299,7 @@ $("btnupd").onclick = () => {
   if (mode === "switch" && players > 0 && !confirm(T("换成完整包会重新安装游戏，正在玩的人会断线。继续？"))) return;
   act(mode === "assets" ? "fetchAssets" : mode === "switch" ? "switchPackage" : "applyUpdate");
 };
+$("btnupdfull").onclick = () => act("applyUpdate", { full: true });
 $("btnupdok").onclick = () => { dismissedAt = Date.now(); renderUpdate(); };
 
 function renderAssets() {
@@ -530,6 +568,10 @@ function fillConfig() {
   $("cfgautob").checked = c.dailyAutoBroadcast !== false;
   $("cfgpkg").value = c.gamePackage === "lite" ? "lite" : "full";
   $("cfgcache").checked = c.playerCache !== false;
+  $("cfgmode").value = c.updateMode === "full" ? "full" : "patch";
+  const am = String(c.autoCheckMin ?? 60), sel = $("cfgauto");
+  if (![...sel.options].some((o) => o.value === am)) sel.add(new Option(everyText(Number(am)), am));
+  sel.value = am;
   $("cfgtok").placeholder = c.hasToken ? T(c.tokenFromIni ? "已从 frpc.ini 读取" : "已保存 — 留空不修改") : T("未设置");
 }
 $("btnsave").onclick = () => {
@@ -538,6 +580,7 @@ $("btnsave").onclick = () => {
     nodeName: $("cfgnode").value, speedLimitMbps: $("cfgspeed").value, sakuraToken: $("cfgtok").value,
     dailyLimitGB: $("cfgdaily").value, dailyAutoBroadcast: $("cfgautob").checked,
     gamePackage: $("cfgpkg").value, playerCache: $("cfgcache").checked,
+    updateMode: $("cfgmode").value, autoCheckMin: $("cfgauto").value,
   } });
   $("cfgtok").value = "";
   toast(T("设置已保存"));

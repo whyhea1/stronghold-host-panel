@@ -88,11 +88,11 @@ SakuraFrp 节点  ◄── frpc（命令行子进程，强制直连）
 
 **游戏更新**
 
-从 GitHub Releases 检查 `sganggs/Stronghold-Protocol` 的新版本，一键下载安装，完成后自动重启游戏。安装卡片按步骤显示进度：下载（MB、速度、剩余时间、线路）、解压（文件数）、替换文件、下载素材、启动。上一版本保留在 `previous/`，可回滚。访问 GitHub 先走本机代理端口，再直连，最后用下载镜像；某条线路持续 20 秒低于 100 KB/s 时换下一条。
+从 GitHub Releases 检查 `sganggs/Stronghold-Protocol` 的新版本，一键下载安装，完成后自动重启游戏。默认使用「更新包」（`-update.zip`）：它只含相对上一版改动的文件，每个更新包只能用在紧邻的上一版上。已装 v0.2.0、最新 v0.2.2 时，面板会先后下载 v0.2.1 和 v0.2.2 两个更新包，在 `updates/stage` 里的当前版本副本上依次应用，每个都交给游戏自带的 `server/update.js` 按 `MANIFEST.json` 校验，全部通过后才停服、换文件、重启，所以游戏在下载和准备期间不中断。更新包链不连续（例如从 v0.1.x 升级）、校验失败，或更新包合计比完整包还大时，面板自动改下完整包，原文件夹不会被改动。更新卡片上的「改用完整包」可手动跳过更新包。面板每小时自动检查一次新版本（只提醒，不自动安装），间隔可在「设置」中改为 5 分钟到 7 天或关闭。安装卡片按步骤显示进度：下载（MB、速度、剩余时间、线路、第几个更新包）、解压（文件数）、应用更新包 / 替换文件、下载素材、启动。上一版本保留在 `previous/`，可回滚。访问 GitHub 先走本机代理端口，再直连，最后用下载镜像；某条线路持续 20 秒低于 100 KB/s 时换下一条。
 
 游戏从 v0.2.0 起分两种安装包，在「设置 → 游戏安装包」中选择：
 
-- **完整包**（默认，推荐，约 430 MB）：带全部美术和音频，还有 3D 棋盘、召唤物模型等只在本机客户端使用的素材。
+- **完整包**（默认，推荐，约 500 MB）：带全部美术和音频，还有 3D 棋盘、召唤物模型等只在本机客户端使用的素材。
 - **精简包**（约 22 MB）：装好后面板运行游戏自带的 `tools/setup.mjs`，从游戏素材源下载美术和音频（约 460 MB，可续传，不走 GitHub）。
 
 素材缺失或不完整时，面板显示横幅，可以「下载素材」或「换成完整包」。
@@ -206,7 +206,7 @@ SakuraFrp 自动 HTTPS 使用自签名证书，浏览器在这种页面上不保
 
 ## 配置
 
-首次启动时，面板根据 `lib/core.mjs` 中的默认值生成 `config.json`。标准安装无需修改。以下参数可在面板「设置」中修改，保存后立即生效：`publicUrl`、`frpcBin`、`frpcConfig`、`sakuraToken`、`nodeName`、`speedLimitMbps`、`dailyLimitGB`、`dailyAutoBroadcast`、`gamePackage`、`playerCache`。`lang` 由右上角的语言按钮设置。其他参数（端口、游戏目录、代理等）需编辑文件后重启面板。
+首次启动时，面板根据 `lib/core.mjs` 中的默认值生成 `config.json`。标准安装无需修改。以下参数可在面板「设置」中修改，保存后立即生效：`publicUrl`、`frpcBin`、`frpcConfig`、`sakuraToken`、`nodeName`、`speedLimitMbps`、`updateMode`、`autoCheckMin`、`dailyLimitGB`、`dailyAutoBroadcast`、`gamePackage`、`playerCache`。`lang` 由右上角的语言按钮设置。其他参数（端口、游戏目录、代理等）需编辑文件后重启面板。
 
 完整参数表见 [安装指南：config.json 参数](INSTALL.md#configjson-参数)。
 
@@ -232,7 +232,7 @@ SakuraFrp 自动 HTTPS 使用自签名证书，浏览器在这种页面上不保
 
 ## 发布版本
 
-在 GitHub 上用新标签（例如 `v1.1.0`）创建并发布 Release 后，`.github/workflows/release.yml` 会为 macOS、Windows、Linux 各构建一个 ZIP 并上传到该 Release。每个 ZIP 只包含面板、文档、示例配置和对应系统的启动文件。
+在 GitHub 上用新标签（例如 `v1.3.0`）创建并发布 Release 后，`.github/workflows/release.yml` 会为 macOS、Windows、Linux 各构建一个 ZIP 并上传到该 Release。每个 ZIP 只包含面板、文档、示例配置和对应系统的启动文件。
 
 ## 目录结构
 
@@ -334,11 +334,15 @@ Your browser ──► host panel :3100 (127.0.0.1 only, other devices cannot co
 
 **Game updates**
 
-The panel checks GitHub releases of `sganggs/Stronghold-Protocol`, installs a new version with one click, then restarts the game. The install card shows each step: download (MB, speed, time left, route), extract (file count), install files, download art, and start. It keeps the old version in `previous/` for rollback. For GitHub, the panel tries local proxy ports first, then direct, then download mirrors. A route that stays under 100 KB/s for 20 s is dropped for the next one.
+The panel checks GitHub releases of `sganggs/Stronghold-Protocol`, installs a new version with one click, then restarts the game. By default it uses the update pack (`-update.zip`). An update pack holds only the files that changed from the release before it. Each pack applies to exactly one earlier version. If v0.2.0 is installed and v0.2.2 is the latest, the panel downloads the v0.2.1 pack and the v0.2.2 pack. It applies them one after the other to a copy of the current version in `updates/stage`. The `server/update.js` file of the game checks each step against `MANIFEST.json`. When every pack passes, the panel stops the game, swaps the files, and restarts. The game keeps running during the download and the preparation.
+
+The panel installs the full package if a pack does not fit. This happens when the packs have a gap (for example, an upgrade from v0.1.x), when a check fails, or when the packs are larger than the full package. The old folder does not change. The button "Use the full package instead" on the update card skips the packs. The panel also checks for a new version every hour. It only notifies you and never installs by itself. In Settings you can set the interval from 5 minutes to 7 days, or turn it off.
+
+The install card shows each step: download (MB, speed, time left, route, pack number), extract (file count), apply packs or install files, download art, and start. It keeps the old version in `previous/` for rollback. For GitHub, the panel tries local proxy ports first, then direct, then download mirrors. A route that stays under 100 KB/s for 20 s is dropped for the next one.
 
 From v0.2.0, the game has two packages. Select one in Settings → 游戏安装包:
 
-- **Full** (default, recommended, about 430 MB): all art and audio, also client-only art such as the 3D board and the summon models.
+- **Full** (default, recommended, about 500 MB): all art and audio, also client-only art such as the 3D board and the summon models.
 - **Lite** (about 22 MB): after the install, the panel runs the game's own `tools/setup.mjs`, which downloads the art and audio from the game's asset sources (about 460 MB, resumable, not from GitHub).
 
 When art is missing or incomplete, a banner offers 下载素材 (download art) or 换成完整包 (switch to the full package).
@@ -452,7 +456,7 @@ When the game is down, `/play` shows an offline page with the host announcement.
 
 ## Configuration
 
-The panel creates `config.json` on first start with the defaults from `lib/core.mjs`. A standard setup needs no changes. You can change these keys in the panel settings, and they apply at once: `publicUrl`, `frpcBin`, `frpcConfig`, `sakuraToken`, `nodeName`, `speedLimitMbps`, `dailyLimitGB`, `dailyAutoBroadcast`, `gamePackage`, `playerCache`. The language button at the top right sets `lang`. Change the other keys (ports, game folder, proxy) in the file, then restart the panel.
+The panel creates `config.json` on first start with the defaults from `lib/core.mjs`. A standard setup needs no changes. You can change these keys in the panel settings, and they apply at once: `publicUrl`, `frpcBin`, `frpcConfig`, `sakuraToken`, `nodeName`, `speedLimitMbps`, `updateMode`, `autoCheckMin`, `dailyLimitGB`, `dailyAutoBroadcast`, `gamePackage`, `playerCache`. The language button at the top right sets `lang`. Change the other keys (ports, game folder, proxy) in the file, then restart the panel.
 
 [INSTALL.md](INSTALL.md#configjson) explains each key. 
 
@@ -478,7 +482,7 @@ For more, see [Troubleshooting](INSTALL.md#troubleshooting).
 
 ## Releases
 
-To make a release, create a release on GitHub with a new tag (for example `v1.1.0`), then publish it. The workflow in `.github/workflows/release.yml` then builds one ZIP each for macOS, Windows, and Linux, and adds the ZIPs to the release. Each ZIP contains only the panel, the docs, the example config, and the start file for that system.
+To make a release, create a release on GitHub with a new tag (for example `v1.3.0`), then publish it. The workflow in `.github/workflows/release.yml` then builds one ZIP each for macOS, Windows, and Linux, and adds the ZIPs to the release. Each ZIP contains only the panel, the docs, the example config, and the start file for that system.
 
 ## Layout
 

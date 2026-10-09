@@ -26,6 +26,8 @@
   "dailyLimitGB": 2,
   "dailyAutoBroadcast": true,
   "gamePackage": "full",
+  "updateMode": "patch",
+  "autoCheckMin": 60,
   "playerCache": true,
   "lang": "zh"
 }
