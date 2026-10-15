@@ -12,6 +12,24 @@ const { T } = I18N;
 const EN = I18N.lang === "en";
 
 I18N.add({
+  "整活 Mod": "Dancing mod", "用整活 Mod 启动游戏": "Launch the game with the dancing mod", "Mod 包": "Mod pack", "适用游戏": "For game",
+  "安装 Mod": "Install the mod", "更新 Mod": "Update the mod", "重启游戏生效": "Restart the game to apply", "检查 Mod 更新": "Check for mod updates", "移除 Mod": "Remove the mod",
+  "未安装": "Not installed", "已安装": "Installed", "准备中": "Working", "需要更新": "Needs update",
+  "下载 Mod 包": "Download the mod pack", "复制游戏文件": "Copy the game files", "叠加 Mod 补丁": "Apply the mod patch", "检查 Mod": "Check the mod", "启用": "Switch over",
+  "只装「整活」这一个 Mod（让战斗界面的元素转起来）。面板会另做一份游戏副本并叠上 Mod 补丁，原版游戏文件不会被改动，要多占一份游戏的磁盘空间。":
+    "Only the dancing mod is installed (it makes the battle UI elements spin). The panel makes a separate copy of the game and applies the mod patch to it. The vanilla game files do not change, and the copy needs about as much disk space as the game.",
+  "Mod 包目前只支持游戏 {g}，你的游戏是 {b}。Mod 包更新后这里会提示。": "The mod pack supports game {g} only, and your game is {b}. This page tells you when the mod pack is updated.",
+  "游戏已更新到 {b}，Mod 副本还停在 {g}，现在按原版启动。新的 Mod 包出来后点「更新 Mod」。": "The game is now {b}, but the mod copy is for {g}, so the vanilla game starts. When a new mod pack is out, click Update the mod.",
+  "游戏已更新到 {b}，新的 Mod 包已发布，点「更新 Mod」重新制作副本。": "The game is now {b} and a new mod pack is out. Click Update the mod to rebuild the copy.",
+  "勾选后下次启动游戏时生效。战斗里的图标键打开整活设置，默认所有元素都是关。": "The setting applies at the next game start. In a match, the icon button opens the dancing settings. Every element is off by default.",
+  "Mod 包有新版本 {t}，点「更新 Mod」。": "A new mod pack {t} is out. Click Update the mod.",
+  "正在制作 Mod 版游戏副本，原版游戏不受影响。": "Making the modded game copy. The vanilla game is not affected.",
+  "Mod 没有装好：{why}。原版游戏不受影响。": "The mod was not installed: {why}. The vanilla game is not affected.",
+  "Mod 包和游戏版本不一致": "The mod pack does not match the game version", "无法连接 GitHub": "Cannot reach GitHub", "游戏文件和官方版本不一致": "The game files differ from the official version",
+  "下载失败": "Download failed", "解压失败": "Extract failed", "Mod 检查没通过": "The mod check failed", "Mod 包内容不完整": "The mod pack is incomplete", "制作失败，见日志": "Build failed, see the log",
+  "{a} / {b} 个文件": "{a} / {b} files",
+  "更新 Mod 会重启游戏，正在玩的人会断线。继续？": "Updating the mod restarts the game, and players in a match are disconnected. Continue?",
+  "移除后游戏按原版启动，原版文件不受影响。继续？": "After removal the game starts as vanilla. The vanilla files do not change. Continue?",
   "改用完整包": "Use the full package instead", "不用更新包，下载整个完整包": "Skip the update packs and download the whole full package",
   "自动检查": "Auto check", "游戏更新方式": "Game update mode", "自动检查更新": "Check for updates automatically",
   "更新包（只下改动的文件，推荐）": "Update packs (only the changed files, recommended)", "完整包（每次下整个包）": "Full package (the whole package every time)",
@@ -184,7 +202,7 @@ function render() {
   const n = S.sakura && S.sakura.myNode;
   $("tunnode").textContent = n ? n.name : (S.config.nodeName || "—");
 
-  renderUpdate(); renderAssets();
+  renderUpdate(); renderAssets(); renderMods();
 
   // links
   $("plink").textContent = S.publicUrl || T("未设置 — 在设置里填写");
@@ -299,6 +317,64 @@ $("btnupd").onclick = () => {
   if (mode === "switch" && players > 0 && !confirm(T("换成完整包会重新安装游戏，正在玩的人会断线。继续？"))) return;
   act(mode === "assets" ? "fetchAssets" : mode === "switch" ? "switchPackage" : "applyUpdate");
 };
+// ---- dancing mod ----------------------------------------------------------------------------------------------
+const MOD_STEP = { download: "下载 Mod 包", extract: "解压", copy: "复制游戏文件", overlay: "叠加 Mod 补丁", check: "检查 Mod", swap: "启用" };
+const MOD_ERR = { version: "Mod 包和游戏版本不一致", network: "无法连接 GitHub", overlay: "游戏文件和官方版本不一致", download: "下载失败", extract: "解压失败", check: "Mod 检查没通过", format: "Mod 包内容不完整" };
+function renderMods() {
+  const m = S && S.mods; if (!m) return;
+  const run = m.run, busy = !!(run && run.phase === "running"), ready = !!(m.installed && !m.stale);
+  const live = !!m.running, restart = live && m.running !== m.profile;
+  let tone = "", text = T("未安装");
+  if (busy) { tone = "busy"; text = T("准备中"); }
+  else if (m.installed && m.stale) { tone = "bad"; text = T("需要更新"); }
+  else if (m.installed) { tone = live && m.running === "modded" ? "ok" : ""; text = live && m.running === "modded" ? T("运行中") : T("已安装"); }
+  setState($("modstate"), tone, text);
+  $("modpack").textContent = m.installed ? m.installed.tag : m.remote ? m.remote.tag + " (" + T("未安装") + ")" : "—";
+  $("modgame").textContent = m.installed ? m.installed.game : m.remote && m.remote.game || "—";
+
+  let hint = "";
+  if (busy) hint = T("正在制作 Mod 版游戏副本，原版游戏不受影响。");
+  else if (run && run.phase === "error") hint = T("Mod 没有装好：{why}。原版游戏不受影响。", { why: T(MOD_ERR[run.error] || "制作失败，见日志") });
+  else if (m.installed && m.stale) hint = m.canBuild ? T("游戏已更新到 {b}，新的 Mod 包已发布，点「更新 Mod」重新制作副本。", { b: m.base })
+    : T("游戏已更新到 {b}，Mod 副本还停在 {g}，现在按原版启动。新的 Mod 包出来后点「更新 Mod」。", { b: m.base, g: m.installed.game });
+  else if (m.installed && m.newer) hint = T("Mod 包有新版本 {t}，点「更新 Mod」。", { t: m.remote.tag });
+  else if (m.installed) hint = T("勾选后下次启动游戏时生效。战斗里的图标键打开整活设置，默认所有元素都是关。");
+  else if (m.lagging) hint = T("Mod 包目前只支持游戏 {g}，你的游戏是 {b}。Mod 包更新后这里会提示。", { g: m.remote.game, b: m.base || "—" });
+  else hint = T("只装「整活」这一个 Mod（让战斗界面的元素转起来）。面板会另做一份游戏副本并叠上 Mod 补丁，原版游戏文件不会被改动，要多占一份游戏的磁盘空间。");
+  $("modhint").textContent = hint;
+
+  const cb = $("modlaunch");
+  cb.checked = m.profile === "modded"; cb.disabled = !ready || busy;
+  $("modlaunchrow").classList.toggle("off", !ready);
+  const upd = m.installed && (m.newer || (m.stale && m.canBuild));
+  const prep = $("btnmodprep");
+  prep.classList.toggle("hidden", busy || !((!m.installed && m.canBuild) || upd));
+  prep.textContent = T(m.installed ? "更新 Mod" : "安装 Mod");
+  $("btnmodrestart").classList.toggle("hidden", !restart);
+  $("btnmodrm").classList.toggle("hidden", !m.installed || busy);
+
+  const ol = $("modsteps"), show = !!run && (busy || run.phase === "error");
+  ol.classList.toggle("hidden", !show);
+  if (!show) return;
+  ol.innerHTML = run.steps.map((s) => {
+    let det = "", pct = null;
+    if (s.id === "download" && (s.status === "run" || s.status === "done") && run.dl) {
+      det = s.status === "run" ? MB(run.dl.received) : MB(run.dl.received || 0);
+    } else if (s.id === "copy" && s.status === "run" && run.cp) {
+      pct = run.cp.total ? Math.min(100, (run.cp.files / run.cp.total) * 100) : null;
+      det = T("{a} / {b} 个文件", { a: run.cp.files.toLocaleString(), b: run.cp.total.toLocaleString() });
+    }
+    return `<li class="${s.status}"><div><span class="s-name">${esc(T(MOD_STEP[s.id] || s.id))}</span>${det ? `<span class="s-det num">${esc(det)}</span>` : ""}</div>` +
+      (pct != null ? `<div class="bar"><i style="width:${pct.toFixed(1)}%"></i></div>` : "") + "</li>";
+  }).join("");
+}
+$("modlaunch").onchange = (e) => act("setProfile", { profile: e.target.checked ? "modded" : "vanilla" });
+$("btnmodprep").onclick = () => {
+  const players = S && S.health ? S.health.humans : 0;
+  if (S.mods && S.mods.running === "modded" && players > 0 && !confirm(T("更新 Mod 会重启游戏，正在玩的人会断线。继续？"))) return;
+  act("prepareMods");
+};
+$("btnmodrm").onclick = () => { if (confirm(T("移除后游戏按原版启动，原版文件不受影响。继续？"))) act("removeMods"); };
 $("btnupdfull").onclick = () => act("applyUpdate", { full: true });
 $("btnupdok").onclick = () => { dismissedAt = Date.now(); renderUpdate(); };
 

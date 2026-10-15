@@ -29,5 +29,6 @@
   "updateMode": "patch",
   "autoCheckMin": 60,
   "playerCache": true,
+  "launchProfile": "vanilla",
   "lang": "zh"
 }

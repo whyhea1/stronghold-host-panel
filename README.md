@@ -188,6 +188,28 @@ SakuraFrp 自动 HTTPS 使用自签名证书，浏览器在这种页面上不保
 
 界面默认简体中文，右上角可切换 English。中转站、离线页和备份页同样支持两种语言，并默认跟随玩家在游戏内选择的语言。界面支持亮色、暗色和跟随系统三种主题，并按窗口宽度在 3 栏、2 栏、1 栏之间切换。游戏已安装时，面板直接使用游戏自带的字体。
 
+### 整活 Mod
+
+面板可以装上 [CyanFish 模组包](https://github.com/CyanF1sh/Stronghold-Protocol-CyanModPack)里的「整活」Mod，让战斗界面的元素转起来。只装 `cyanfish.dj-all` 和它的设置页所依赖的 `cyanfish.mod-settings`，包里的其他 Mod 都不装。
+
+- 面板另做一份游戏副本 `<gameRoot>/modded/`，在副本上叠加 Mod 补丁。原版 `current/` 不会被改动。
+- 勾选「用整活 Mod 启动游戏」后，下次启动从副本运行。游戏正在运行时，面板会显示「重启游戏生效」。
+- Mod 包必须和游戏版本完全一致（游戏 0.2.6 对应 Mod 包 0.2.6），否则 Mod 加载器会跳过 Mod。游戏更新后，面板会用新的 Mod 包重做副本。Mod 包还没跟上时，游戏按原版启动，卡片显示「需要更新」。
+- 自动检查更新时会一并检查 Mod 包。有新版只发通知，不会自动安装。
+- 副本多占一份游戏的磁盘空间。
+- 默认所有元素的旋转都是关闭的，要在战斗里点图标键打开整活设置。
+- 素材说明：Mod 带一张社区同人二创表情包（`amiya-spin.gif`）。它不是官方素材，不适用 GPL，仅限非商业使用，素材版权归原作者，角色版权归鹰角网络 / Yostar。面板不分发它，只从 Mod 包作者的仓库下载。详见 Mod 包中的 `SOURCE.md`。
+
+技术细节：
+
+1. 下载最新 Release（默认仓库 `CyanF1sh/Stronghold-Protocol-CyanModPack`，由文件专用参数 `modRepo` 指定）并读取其中的 `VERSION`。它必须等于 `current/package.json` 的 `version`。
+2. 把 `current/` 复制成 `modded.new/`。
+3. 运行包自带的 `tools/apply-overlay.mjs`（先 `--dry-run` 检查）。发布版 ZIP 不含 `docs/` 和 `test/` 中的 12 个文件，覆盖层会把它们报为冲突（现状为 `ABSENT`）。只有全部冲突都属于这种情况时，面板才加 `--force`；其他冲突一律中止。
+4. 把两个 Mod 复制进 `modded.new/mods/`，运行 `tools/mod.mjs validate`，通过后换成 `modded/`。
+5. 用 Mod 启动时，面板给游戏进程设置 `SP_MODS=<gameRoot>/modded/mods`。玩家缓存不缓存 `/data/` 下的文件，因为这些响应会被 Mod 改写。
+
+配置键 `launchProfile`（`vanilla` 或 `modded`）记录上次选择，由卡片上的勾选框修改。副本缺失或版本不符时，面板自动改回 `vanilla`。
+
 ## 玩家端页面
 
 <picture>
@@ -226,13 +248,14 @@ SakuraFrp 自动 HTTPS 使用自签名证书，浏览器在这种页面上不保
 | 检查更新失败 | 代理软件未开启，或其端口不在 `proxyPorts` 中。设置 `ghProxy`。 |
 | 提示「隧道已在线」 | 已有旧的 `frpc` 连接同一条隧道。先断开再连接；仍无效时关闭 Sakura 启动器。 |
 | 游戏画面是占位图 | 装的是精简包，素材还没下载。点横幅上的「下载素材」，或「换成完整包」。 |
+| 卡片显示「需要更新」，游戏按原版启动 | 游戏更新后，Mod 包还没有对应的新版本（Mod 包与游戏版本必须完全一致）。等 Mod 包更新，再点「更新 Mod」。 |
 | 玩家每次进游戏都很慢、很费流量 | 确认「设置」中玩家缓存已开启。玩家换了浏览器、用无痕模式，或你换了隧道地址时，缓存需要重新建立。 |
 
 更多问题见 [安装指南：故障排查](INSTALL.md#故障排查)。
 
 ## 发布版本
 
-在 GitHub 上用新标签（例如 `v1.3.0`）创建并发布 Release 后，`.github/workflows/release.yml` 会为 macOS、Windows、Linux 各构建一个 ZIP 并上传到该 Release。每个 ZIP 只包含面板、文档、示例配置和对应系统的启动文件。
+在 GitHub 上用新标签（例如 `v1.4.0`）创建并发布 Release 后，`.github/workflows/release.yml` 会为 macOS、Windows、Linux 各构建一个 ZIP 并上传到该 Release。每个 ZIP 只包含面板、文档、示例配置和对应系统的启动文件。
 
 ## 目录结构
 
@@ -438,6 +461,28 @@ On the hub's 省流量 card, players can also import the official full package Z
 
 The UI is in Simplified Chinese by default. The button at the top right changes it to English. The hub, the offline page, and the backup page also have both languages, and they follow the language that the player selected in the game. The UI has light, dark, and auto themes. The layout changes from 3 columns to 2 to 1 for the window width. The panel loads the game's fonts from the game install when they are available.
 
+### Dancing mod
+
+The panel can install the "dancing" mod from the [CyanFish mod pack](https://github.com/CyanF1sh/Stronghold-Protocol-CyanModPack). It makes the elements of the battle UI spin. The panel installs only `cyanfish.dj-all` and `cyanfish.mod-settings`, which holds the settings page of the mod. It installs no other mod from the pack.
+
+- The panel makes a separate copy of the game in `<gameRoot>/modded/` and applies the mod patch to the copy. The vanilla `current/` folder does not change.
+- When you tick 用整活 Mod 启动游戏 (launch with the dancing mod), the next start runs from the copy. If the game is running, the panel shows a 重启游戏生效 (restart to apply) button.
+- The mod pack must match the game version exactly (game 0.2.6 needs mod pack 0.2.6). If it does not match, the mod loader skips the mod. After a game update, the panel rebuilds the copy with the new mod pack. If the mod pack is not ready yet, the game starts as vanilla and the card shows 需要更新 (needs update).
+- The automatic update check also checks the mod pack. A new version causes a notification only. The panel does not install it by itself.
+- The copy uses about as much disk space as the game.
+- Every element has rotation off by default. In a match, click the icon button to open the dancing settings.
+- Asset note: the mod includes one fan-made meme image (`amiya-spin.gif`). It is not an official asset and it is not under the GPL. Use is non-commercial only. The artist owns the image, and Hypergryph / Yostar own the character. The panel does not ship the image. It downloads the image from the repository of the mod pack author. See `SOURCE.md` in the mod pack.
+
+Technical details:
+
+1. The panel downloads the latest release (default repository `CyanF1sh/Stronghold-Protocol-CyanModPack`, set by the file-only key `modRepo`) and reads its `VERSION` file. It must equal `version` in `current/package.json`.
+2. The panel copies `current/` to `modded.new/`.
+3. The panel runs `tools/apply-overlay.mjs` from the pack, first with `--dry-run`. The official release ZIP has no `docs/` or `test/` files that the pack lists (12 files), so the overlay reports them as conflicts with the state `ABSENT`. The panel adds `--force` only when all conflicts are of this type. It stops on any other conflict.
+4. The panel copies the two mods to `modded.new/mods/`, runs `tools/mod.mjs validate`, and renames the folder to `modded/`.
+5. For a launch with the mod, the panel sets `SP_MODS=<gameRoot>/modded/mods` for the game process. The player cache skips files under `/data/`, because the mods change those responses.
+
+The config key `launchProfile` (`vanilla` or `modded`) stores the last choice. The checkbox on the card changes it. If the copy is missing or has the wrong version, the panel sets it back to `vanilla`.
+
 ## Player pages
 
 <picture>
@@ -476,13 +521,14 @@ The panel creates `config.json` on first start with the defaults from `lib/core.
 | GitHub check fails | The proxy app is off, or its port is not in `proxyPorts`. Set `ghProxy`. |
 | Tunnel shows 隧道已在线 | An old `frpc` is still connected to the same tunnel. Click 断开, then 连接. If that does not help, close the SakuraFrp launcher app. |
 | The game shows placeholder art | The lite package is installed and its art is not downloaded yet. Click 下载素材 on the banner, or 换成完整包. |
+| The card shows 需要更新 and the game starts as vanilla | The game updated and the mod pack has no matching version yet. The mod pack and the game must have the same version. Wait for a new mod pack, then click 更新 Mod. |
 | Each visit is slow and uses much data | Make sure the player cache is on in Settings. A new browser, a private window, or a new tunnel address starts the cache again. |
 
 For more, see [Troubleshooting](INSTALL.md#troubleshooting).
 
 ## Releases
 
-To make a release, create a release on GitHub with a new tag (for example `v1.3.0`), then publish it. The workflow in `.github/workflows/release.yml` then builds one ZIP each for macOS, Windows, and Linux, and adds the ZIPs to the release. Each ZIP contains only the panel, the docs, the example config, and the start file for that system.
+To make a release, create a release on GitHub with a new tag (for example `v1.4.0`), then publish it. The workflow in `.github/workflows/release.yml` then builds one ZIP each for macOS, Windows, and Linux, and adds the ZIPs to the release. Each ZIP contains only the panel, the docs, the example config, and the start file for that system.
 
 ## Layout
 

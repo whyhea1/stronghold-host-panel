@@ -116,6 +116,30 @@
         </div>
       </section>
 
+      <section class="panel" id="modpanel">
+        <header class="ph">
+          <div><div class="micro">Mod · Dance</div><h2>整活 Mod</h2></div>
+          <span class="state" id="modstate">—</span>
+        </header>
+        <div class="pb">
+          <div class="hint" id="modhint"></div>
+          <label class="check" id="modlaunchrow"><input type="checkbox" id="modlaunch"> 用整活 Mod 启动游戏</label>
+          <dl class="kv">
+            <dt>Mod 包</dt><dd class="num" id="modpack">—</dd>
+            <dt>适用游戏</dt><dd class="num" id="modgame">—</dd>
+          </dl>
+          <ol class="steps hidden" id="modsteps"></ol>
+          <div class="btns" style="margin-top:10px">
+            <button class="btn btn--primary hidden" id="btnmodprep">安装 Mod</button>
+            <button class="btn hidden" id="btnmodrestart" data-act="restartGame">重启游戏生效</button>
+          </div>
+          <div class="btns" style="margin-top:8px">
+            <button class="btn btn--ghost btn--sm" data-act="checkMods">检查 Mod 更新</button>
+            <button class="btn btn--ghost btn--sm hidden" id="btnmodrm">移除 Mod</button>
+          </div>
+        </div>
+      </section>
+
       <section class="panel">
         <header class="ph">
           <div><div class="micro">02 · SakuraFrp tunnel</div><h2>穿透隧道</h2></div>

@@ -18,6 +18,7 @@ import { config, procs, log } from "./lib/core.mjs";
 import { killTree } from "./lib/util.mjs";
 import { startHub, stopHub } from "./lib/hub.mjs";
 import { checkUpdate, checkAssets, scheduleAutoCheck } from "./lib/updater.mjs";
+import { checkMods } from "./lib/mods.mjs";
 import { startSysStats } from "./lib/sysstats.mjs";
 import { buildCacheManifest } from "./lib/assetcache.mjs";
 import { startSakuraPolling } from "./lib/sakura.mjs";
@@ -32,6 +33,7 @@ startPanel(() => {
   const url = `http://localhost:${config.panelPort}`;
   log("panel", `panel ready on ${OS_NAME} — ${url}`);
   checkUpdate().catch(() => {}).then(() => scheduleAutoCheck());
+  checkMods().catch(() => {});
   if (!process.env.NO_OPEN) openTarget(url);
 });
 

@@ -316,6 +316,8 @@ sing-box 配置中，如果直连出站的 tag 不是 `direct`，请换成你自
 | `updateMode` | `patch` | 是 | 游戏更新方式：`patch`（更新包，只下改动的文件，依次应用）或 `full`（每次下完整包） |
 | `autoCheckMin` | `60` | 是 | 自动检查新版本的间隔（分钟），`0` 为关闭，设置页可选 5–10080；只提醒，不自动安装 |
 | `playerCache` | `true` | 是 | 玩家浏览器保存游戏文件（IndexedDB），重连不再通过隧道重新下载；中转站可导入完整包 ZIP |
+| `launchProfile` | `vanilla` | 是 | `vanilla`（原版）或 `modded`（用整活 Mod 的游戏副本启动）。由「整活 Mod」卡片的勾选框修改，不在设置页 |
+| `modRepo` | `CyanF1sh/Stronghold-Protocol-CyanModPack` | 否 | 提供整活 Mod 的 Mod 包仓库，只能编辑文件修改 |
 | `lang` | `zh` | 是 | `zh` 或 `en`：面板默认语言和桌面通知语言，由右上角语言按钮设置 |
 | `port` | `3000` | 否 | 中转站对外端口，必须与隧道的本地端口一致 |
 | `gameInternalPort` | `3001` | 否 | 游戏在 127.0.0.1 上的端口，位于中转站之后 |
@@ -345,6 +347,8 @@ Windows 上 `~` 指用户文件夹，例如 `C:\Users\<用户名>`。
 | `.cache/crc.json` | 玩家缓存文件清单的校验值缓存，可以删除，下次启动重建 |
 | `~/StrongholdProtocol/current/` | 已安装的游戏 |
 | `~/StrongholdProtocol/previous/` | 上次更新前的版本，用于回滚 |
+| `~/StrongholdProtocol/modded/` | 整活 Mod 的游戏副本（可以删除，或点「移除 Mod」） |
+| `~/StrongholdProtocol/modpack/` | 制作副本时的临时文件，完成后自动清理 |
 | `~/StrongholdProtocol/updates/` | 下载中的文件 |
 
 ## 更新面板
@@ -378,6 +382,8 @@ Windows 上 `~` 指用户文件夹，例如 `C:\Users\<用户名>`。
 | 游戏画面是占位图、缺少棋盘或模型 | 装的是精简包且素材未下载完。点击横幅上的「下载素材」，或在「设置」中换成完整包。 |
 | 玩家每次进入游戏都重新下载 | 在「设置」中开启玩家缓存。无痕模式不保存缓存；更换隧道地址（节点或端口）后缓存按新地址重新建立。 |
 | 中转站导入 ZIP 时提示「不是游戏完整包」或很多文件「与本服版本不同」 | 下载与房主游戏版本相同的完整包（中转站卡片中有链接），不要用精简包。 |
+| 「整活 Mod」卡片显示「需要更新」，游戏按原版启动 | 游戏已更新，Mod 包还没有同版本。Mod 包必须与游戏版本完全一致。等 Mod 包更新后点「更新 Mod」。 |
+| 安装 Mod 时提示「游戏文件和官方版本不一致」 | `current/` 中有文件被改过。重新安装游戏（设置中换成完整包），再安装 Mod。 |
 | 游戏无法启动 | 运行 `node -v`，应输出 `v22.x` 或更高；然后查看面板「日志」卡片中的「游戏」标签。 |
 
 ## 使用 Git 克隆（可选）
@@ -740,6 +746,8 @@ The panel reads `config.json` one time, when it starts. If you edit the file, re
 | `updateMode` | `patch` | yes | Game update mode: `patch` (update packs, only the changed files, applied in order) or `full` (the full package every time) |
 | `autoCheckMin` | `60` | yes | Minutes between automatic update checks. `0` turns it off. The page offers 5–10080. It only notifies and never installs. |
 | `playerCache` | `true` | yes | Players' browsers keep the game files (IndexedDB), so a reconnect does not download them through the tunnel again. Players can import the full package ZIP on the hub. |
+| `launchProfile` | `vanilla` | yes | `vanilla`, or `modded` (start from the game copy with the dancing mod). The checkbox on the 整活 Mod card sets it, not the settings page. |
+| `modRepo` | `CyanF1sh/Stronghold-Protocol-CyanModPack` | no | The mod pack repository that supplies the dancing mod. Change it in the file only. |
 | `lang` | `zh` | yes | `zh` or `en`: the default panel language and the language of desktop notifications. The language button at the top right sets it. |
 | `port` | `3000` | no | Public port of the hub. Must be the same as 本地端口 of the tunnel. |
 | `gameInternalPort` | `3001` | no | Port of the game on 127.0.0.1, behind the hub |
@@ -769,6 +777,8 @@ On Windows, `~` is your user folder, for example `C:\Users\<you>`.
 | `.cache/crc.json` | Saved checksums for the player cache file list. You can delete it. The panel makes it again at the next start. |
 | `~/StrongholdProtocol/current/` | The installed game |
 | `~/StrongholdProtocol/previous/` | The version before the last update, for rollback |
+| `~/StrongholdProtocol/modded/` | The game copy with the dancing mod. You can delete it, or click 移除 Mod. |
+| `~/StrongholdProtocol/modpack/` | Temporary files while the copy is built. The panel removes them when done. |
 | `~/StrongholdProtocol/updates/` | Downloads in progress |
 
 ## Update the panel
@@ -802,6 +812,8 @@ The game is in `~/StrongholdProtocol`, outside the panel folder. A panel update 
 | The game shows placeholder art, or the board or models are missing | The lite package is installed and its art download is not complete. Click 下载素材 on the banner, or select the full package in 设置. |
 | Players download everything again on each visit | Turn on the player cache in 设置. A private window keeps no cache. After a new tunnel address (node or port), the cache starts again for the new address. |
 | A ZIP import on the hub says 不是游戏完整包, or many files are 与本服版本不同 | Download the full package for the same game version as the host (the hub card has the link). Do not use the lite package. |
+| The 整活 Mod card shows 需要更新 and the game starts as vanilla | The game updated and the mod pack has no matching version yet. The mod pack must have the same version as the game. Wait for a new mod pack, then click 更新 Mod. |
+| The mod install says The game files differ from the official version | A file in `current/` was changed. Install the game again (change to the full package in Settings), then install the mod. |
 | The game does not start | Run `node -v`. It must print `v22.x` or later. Then read the Game logs tab in the panel. |
 
 ## Git clone (optional)
